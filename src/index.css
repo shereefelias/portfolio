@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0d1b2a;
+  --surface: #112240;
+  --surface-hover: #1a3a5c;
+  --border: #1e3a5f;
+  --text: #94a3b8;
+  --text-h: #e2e8f0;
+  --accent: #00d9ff;
+  --accent-dim: rgba(0, 217, 255, 0.10);
+  --accent-border: rgba(0, 217, 255, 0.25);
+  --nav-bg: #ffffff;
+  --nav-text: #0d1b2a;
+  --footer-bg: #ffffff;
+  --footer-text: #475569;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4 {
+  color: var(--text-h);
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

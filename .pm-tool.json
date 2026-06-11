@@ -1,0 +1,5 @@
+{
+  "implementation": "status-tracker",
+  "docs_root": "docs/plan",
+  "tracker_root": "docs/tracker"
+}
