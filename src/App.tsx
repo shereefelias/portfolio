@@ -49,12 +49,12 @@ function Layout() {
             }}>
               <LinkedInIcon /> LinkedIn
             </a>
-            <span style={{
+            <a href="https://cal.com/shereefelias/30min" target="_blank" rel="noreferrer" style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              fontSize: '0.875rem', color: '#94a3b8',
+              color: '#0d1b2a', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
             }}>
-              <VideoIcon /> Zoom — <em>coming soon</em>
-            </span>
+              <VideoIcon /> Book a Call
+            </a>
           </div>
         </div>
       </footer>
