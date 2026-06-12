@@ -17,14 +17,7 @@ const chartData: ChartDatum[] = [
 
 export default function Viz() {
   return (
-    <main
-      style={{
-        maxWidth: 1100,
-        margin: '0 auto',
-        padding: '4rem 1.5rem',
-        flex: 1,
-      }}
-    >
+    <main className="page-main">
       <header style={{ marginBottom: '3rem' }}>
         <h1
           style={{
@@ -69,7 +62,7 @@ export default function Viz() {
         <BarChart data={chartData} />
       </div>
 
-      {/* Tech Stack — will become D3 infographic */}
+      {/* Tech Stack */}
       <section style={{ marginTop: '4rem' }}>
         <div style={{ marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-h)', margin: '0 0 0.4rem' }}>
@@ -80,17 +73,13 @@ export default function Viz() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {techStack.map(({ category, items }, i) => (
-            <div key={category} style={{
-              display: 'grid',
-              gridTemplateColumns: '220px 1fr',
-              gap: '1rem',
-              padding: '0.875rem 1rem',
-              background: i % 2 === 0 ? 'var(--surface)' : 'transparent',
-              borderRadius: 6,
-              alignItems: 'baseline',
-            }}>
+            <div
+              key={category}
+              className="tech-row"
+              style={{ background: i % 2 === 0 ? 'var(--surface)' : 'transparent' }}
+            >
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', letterSpacing: '0.02em' }}>
                 {category}
               </span>
@@ -107,106 +96,116 @@ export default function Viz() {
 
 function BarChart({ data }: { data: ChartDatum[] }) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!svgRef.current) return
+    const render = () => {
+      if (!svgRef.current) return
 
-    const svg = d3.select(svgRef.current)
-    svg.selectAll('*').remove()
+      const svg = d3.select(svgRef.current)
+      svg.selectAll('*').remove()
 
-    const margin = { top: 10, right: 20, bottom: 36, left: 52 }
-    const width = svgRef.current.clientWidth - margin.left - margin.right
-    const height = 260 - margin.top - margin.bottom
+      const margin = { top: 10, right: 20, bottom: 36, left: 44 }
+      const totalWidth = svgRef.current.clientWidth || 400
+      const width = totalWidth - margin.left - margin.right
+      const height = 220 - margin.top - margin.bottom
 
-    const g = svg
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`)
+      const g = svg
+        .attr('width', totalWidth)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`)
 
-    const x = d3
-      .scaleBand()
-      .domain(data.map((d) => d.label))
-      .range([0, width])
-      .padding(0.3)
+      const x = d3
+        .scaleBand()
+        .domain(data.map((d) => d.label))
+        .range([0, width])
+        .padding(0.3)
 
-    const y = d3.scaleLinear().domain([0, 100]).range([height, 0])
+      const y = d3.scaleLinear().domain([0, 100]).range([height, 0])
 
-    g.selectAll('.grid-line')
-      .data(y.ticks(5))
-      .enter()
-      .append('line')
-      .attr('class', 'grid-line')
-      .attr('x1', 0)
-      .attr('x2', width)
-      .attr('y1', (d) => y(d))
-      .attr('y2', (d) => y(d))
-      .attr('stroke', '#262626')
-      .attr('stroke-dasharray', '3,3')
+      g.selectAll('.grid-line')
+        .data(y.ticks(5))
+        .enter()
+        .append('line')
+        .attr('x1', 0)
+        .attr('x2', width)
+        .attr('y1', (d) => y(d))
+        .attr('y2', (d) => y(d))
+        .attr('stroke', '#262626')
+        .attr('stroke-dasharray', '3,3')
 
-    g.selectAll('.bar')
-      .data(data)
-      .enter()
-      .append('rect')
-      .attr('class', 'bar')
-      .attr('x', (d) => x(d.label) ?? 0)
-      .attr('y', height)
-      .attr('width', x.bandwidth())
-      .attr('height', 0)
-      .attr('rx', 4)
-      .attr('fill', '#00d9ff')
-      .attr('opacity', 0.85)
-      .transition()
-      .duration(600)
-      .delay((_, i) => i * 80)
-      .attr('y', (d) => y(d.value))
-      .attr('height', (d) => height - y(d.value))
+      g.selectAll('.bar')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('x', (d) => x(d.label) ?? 0)
+        .attr('y', height)
+        .attr('width', x.bandwidth())
+        .attr('height', 0)
+        .attr('rx', 4)
+        .attr('fill', '#00d9ff')
+        .attr('opacity', 0.85)
+        .transition()
+        .duration(600)
+        .delay((_, i) => i * 80)
+        .attr('y', (d) => y(d.value))
+        .attr('height', (d) => height - y(d.value))
 
-    g.selectAll('.bar-label')
-      .data(data)
-      .enter()
-      .append('text')
-      .attr('class', 'bar-label')
-      .attr('x', (d) => (x(d.label) ?? 0) + x.bandwidth() / 2)
-      .attr('y', (d) => y(d.value) - 6)
-      .attr('text-anchor', 'middle')
-      .attr('fill', '#00d9ff')
-      .attr('font-size', '11px')
-      .attr('font-weight', '600')
-      .attr('opacity', 0)
-      .text((d) => d.value)
-      .transition()
-      .delay((_, i) => i * 80 + 600)
-      .attr('opacity', 1)
+      g.selectAll('.bar-label')
+        .data(data)
+        .enter()
+        .append('text')
+        .attr('x', (d) => (x(d.label) ?? 0) + x.bandwidth() / 2)
+        .attr('y', (d) => y(d.value) - 5)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#00d9ff')
+        .attr('font-size', '11px')
+        .attr('font-weight', '600')
+        .attr('opacity', 0)
+        .text((d) => d.value)
+        .transition()
+        .delay((_, i) => i * 80 + 600)
+        .attr('opacity', 1)
 
-    g.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickSize(0))
-      .call((axis) => {
-        axis.select('.domain').attr('stroke', '#262626')
-        axis.selectAll('text')
-          .attr('fill', '#a3a3a3')
-          .attr('font-size', '12px')
-          .attr('dy', '1.2em')
-      })
+      g.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickSize(0))
+        .call((axis) => {
+          axis.select('.domain').attr('stroke', '#262626')
+          axis.selectAll('text')
+            .attr('fill', '#a3a3a3')
+            .attr('font-size', '11px')
+            .attr('dy', '1.2em')
+        })
 
-    g.append('g')
-      .call(d3.axisLeft(y).ticks(5).tickFormat((d) => `${d}`))
-      .call((axis) => {
-        axis.select('.domain').remove()
-        axis.selectAll('.tick line').remove()
-        axis.selectAll('text')
-          .attr('fill', '#a3a3a3')
-          .attr('font-size', '11px')
-      })
+      g.append('g')
+        .call(d3.axisLeft(y).ticks(5).tickFormat((d) => `${d}`))
+        .call((axis) => {
+          axis.select('.domain').remove()
+          axis.selectAll('.tick line').remove()
+          axis.selectAll('text')
+            .attr('fill', '#a3a3a3')
+            .attr('font-size', '11px')
+        })
+    }
+
+    render()
+
+    const observer = new ResizeObserver(render)
+    if (containerRef.current) observer.observe(containerRef.current)
+
+    return () => observer.disconnect()
   }, [data])
 
   return (
-    <svg
-      ref={svgRef}
-      style={{ width: '100%', display: 'block', overflow: 'visible' }}
-      aria-label="Bar chart showing skill proficiency scores"
-    />
+    <div ref={containerRef}>
+      <svg
+        ref={svgRef}
+        style={{ width: '100%', display: 'block', overflow: 'visible' }}
+        aria-label="Bar chart showing skill proficiency scores"
+      />
+    </div>
   )
 }
 

@@ -52,7 +52,7 @@ const diagrams: Diagram[] = [
 
 export default function SystemDesign() {
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '4rem 1.5rem', flex: 1 }}>
+    <main className="page-main">
       <header style={{ marginBottom: '3rem' }}>
         <h1 style={{
           fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800,

@@ -2,17 +2,11 @@ import photo from '../assets/portfolio_pic.jpg'
 
 export default function About() {
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '4rem 1.5rem', flex: 1 }}>
+    <main className="page-main">
 
       {/* Photo + Bio */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr',
-        gap: '3rem',
-        alignItems: 'start',
-        marginBottom: '4rem',
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
+      <div className="about-hero">
+        <div className="about-hero-photo" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
           <img
             src={photo}
             alt="Shereef Elias"
@@ -69,7 +63,6 @@ export default function About() {
             commercial wholesale risk engines that achieved a <strong style={{ color: 'var(--text-h)' }}>10x productivity gain</strong> in
             regulatory operations.
           </p>
-
         </div>
       </div>
 
@@ -78,47 +71,7 @@ export default function About() {
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-h)', margin: '0 0 2rem' }}>
           Career
         </h2>
-        <div style={{ position: 'relative' }}>
-          {/* Vertical line */}
-          <div style={{
-            position: 'absolute', left: 107, top: 8, bottom: 8,
-            width: 2, background: 'var(--border)',
-          }} />
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {career.map((item) => (
-              <div key={item.title} style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '1.75rem', alignItems: 'start' }}>
-                {/* Date — right-aligned to sit against the line */}
-                <div style={{ textAlign: 'right', paddingTop: 4 }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', whiteSpace: 'nowrap' }}>
-                    {item.period}
-                  </span>
-                </div>
-
-                {/* Dot + content */}
-                <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'start' }}>
-                  {/* Dot on the line */}
-                  <div style={{
-                    width: 14, height: 14, borderRadius: '50%',
-                    background: 'var(--accent)', flexShrink: 0,
-                    marginTop: 5, boxShadow: '0 0 0 3px var(--accent-dim)',
-                  }} />
-                  <div>
-                    <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-h)', margin: '0 0 0.15rem' }}>
-                      {item.title}
-                    </p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--accent)', margin: '0 0 0.5rem', fontWeight: 500 }}>
-                      {item.company}
-                    </p>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text)', margin: 0, lineHeight: 1.7 }}>
-                      {item.summary}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Timeline items={career} dotFilled />
       </section>
 
       {/* Education Timeline */}
@@ -126,84 +79,108 @@ export default function About() {
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-h)', margin: '0 0 2rem' }}>
           Education
         </h2>
-        <div style={{ position: 'relative' }}>
-          <div style={{
-            position: 'absolute', left: 107, top: 8, bottom: 8,
-            width: 2, background: 'var(--border)',
-          }} />
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {education.map((item) => (
-              <div key={item.degree} style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '1.75rem', alignItems: 'start' }}>
-                <div style={{ textAlign: 'right', paddingTop: 4 }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)' }}>
-                    {item.year}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'start' }}>
-                  <div style={{
-                    width: 14, height: 14, borderRadius: '50%',
-                    background: 'var(--surface)', border: '2px solid var(--accent)',
-                    flexShrink: 0, marginTop: 5,
-                  }} />
-                  <div>
-                    <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-h)', margin: '0 0 0.15rem' }}>
-                      {item.degree}
-                    </p>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text)', margin: 0 }}>
-                      {item.school}{item.gpa ? ` · GPA ${item.gpa}` : ''}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Timeline items={education} dotFilled={false} />
       </section>
 
     </main>
   )
 }
 
-const career = [
+interface TimelineItem {
+  period: string
+  title: string
+  subtitle: string
+  summary: string
+}
+
+function Timeline({ items, dotFilled }: { items: TimelineItem[]; dotFilled: boolean }) {
+  return (
+    <div className="timeline-wrapper">
+      {/* Vertical line — hidden on mobile via CSS */}
+      <div className="timeline-line-v" style={{ left: 107 }} />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        {items.map((item) => (
+          <div key={item.title} className="timeline-row">
+            {/* Date column — hidden on mobile via CSS */}
+            <div className="timeline-date-col" style={{ textAlign: 'right', paddingTop: 4 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', whiteSpace: 'nowrap' }}>
+                {item.period}
+              </span>
+            </div>
+
+            {/* Dot + content */}
+            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'start' }}>
+              <div
+                className="timeline-dot"
+                style={{
+                  width: 14, height: 14, borderRadius: '50%',
+                  background: dotFilled ? 'var(--accent)' : 'var(--surface)',
+                  border: dotFilled ? 'none' : '2px solid var(--accent)',
+                  flexShrink: 0, marginTop: 5,
+                  boxShadow: dotFilled ? '0 0 0 3px var(--accent-dim)' : 'none',
+                }}
+              />
+              <div>
+                {/* Date shown only on mobile */}
+                <span className="timeline-date-mobile">{item.period}</span>
+                <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-h)', margin: '0 0 0.15rem' }}>
+                  {item.title}
+                </p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--accent)', margin: '0 0 0.5rem', fontWeight: 500 }}>
+                  {item.subtitle}
+                </p>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text)', margin: 0, lineHeight: 1.7 }}>
+                  {item.summary}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const career: TimelineItem[] = [
   {
     period: '2021 – Present',
-    company: 'Fitch Ratings',
     title: 'Director, Engineering Manager — Ratings Workflow Solutions',
+    subtitle: 'Fitch Ratings',
     summary: 'Lead a 30-person, 5-squad global organization through 5 direct-report engineering managers. Own platform strategy, multi-year modernization roadmaps, and end-to-end ratings workflow delivery across Sovereigns, Structured Finance, Public Finance, Surveillance, and Cross-Sector platforms.',
   },
   {
     period: '2017 – 2021',
-    company: 'Fitch Ratings',
     title: 'Associate Director, Team Lead — Ratings Workflow Solutions',
+    subtitle: 'Fitch Ratings',
     summary: 'Led the CMBS platform modernization replacing Rockport/Trepp vendor infrastructure with an in-house hybrid cloud serverless platform — saving $1M+/year and improving analyst productivity by 30%. Built and scaled engineering squads across regions.',
   },
   {
     period: '2014 – 2017',
-    company: 'Fitch Ratings',
     title: 'Lead Developer — Ratings Workflow Solutions',
+    subtitle: 'Fitch Ratings',
     summary: 'Hands-on technical lead for ratings workflow automation across Public Finance and Structured Finance. Established engineering standards and CI/CD practices later adopted across the tribe.',
   },
   {
     period: '2006 – 2014',
-    company: 'Citigroup',
     title: 'Vice President, Application Manager',
+    subtitle: 'Citigroup',
     summary: '8 years, 5 promotions from Engineer to VP. Built compliance analytics platforms (10x productivity gain), AML graph-based entity-resolution systems, and the Commercial Wholesale Collateral Risk Engine across FINRA, AML/KYC, CFPB, and Basel II.',
   },
 ]
 
-const education = [
+const education: TimelineItem[] = [
   {
-    year: '2011',
-    degree: 'M.S. Management Information Systems',
-    school: 'University of South Florida, Tampa, FL',
-    gpa: '3.9/4.0',
+    period: '2011',
+    title: 'M.S. Management Information Systems',
+    subtitle: 'University of South Florida, Tampa, FL · GPA 3.9/4.0',
+    summary: '',
   },
   {
-    year: '2005',
-    degree: 'B.S. Civil Engineering — Structural Engineering',
-    school: 'Cairo University',
-    gpa: '',
+    period: '2005',
+    title: 'B.S. Civil Engineering — Structural Engineering',
+    subtitle: 'Cairo University',
+    summary: '',
   },
 ]
 

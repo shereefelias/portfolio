@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '5rem 1.5rem', flex: 1 }}>
+    <main className="page-main-home">
       <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: 760 }}>
 
         <p style={{
