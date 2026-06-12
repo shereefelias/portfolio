@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import logo from '../assets/logo.png'
 
@@ -14,7 +15,21 @@ const links: NavItem[] = [
   { to: '/about', label: 'About' },
 ]
 
+const linkStyle = ({ isActive }: { isActive: boolean }) => ({
+  display: 'block',
+  padding: '0.375rem 0.75rem',
+  borderRadius: 6,
+  fontSize: '0.875rem',
+  fontWeight: isActive ? 600 : 400,
+  color: isActive ? 'var(--accent)' : 'var(--nav-text)',
+  background: isActive ? 'var(--accent-dim)' : 'transparent',
+  transition: 'color 0.15s, background 0.15s',
+  textDecoration: 'none',
+})
+
 export default function Nav() {
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
     <nav
       style={{
@@ -26,57 +41,76 @@ export default function Nav() {
         boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
       }}
     >
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: '0 auto',
-          padding: '0 1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 96,
-        }}
-      >
-        <NavLink to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+      <div className="nav-inner">
+        <NavLink to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} onClick={() => setIsOpen(false)}>
           <img
             src={logo}
             alt="Shereef Elias"
-            style={{ height: 80, width: 'auto', display: 'block' }}
+            style={{ height: 52, width: 'auto', display: 'block' }}
           />
         </NavLink>
 
-        <ul
-          style={{
-            display: 'flex',
-            gap: '0.25rem',
-            listStyle: 'none',
-            margin: 0,
-            padding: 0,
-          }}
-        >
+        {/* Desktop links */}
+        <ul className="nav-links">
           {links.map(({ to, label }) => (
             <li key={to}>
-              <NavLink
-                to={to}
-                end={to === '/'}
-                style={({ isActive }) => ({
-                  display: 'block',
-                  padding: '0.375rem 0.75rem',
-                  borderRadius: 6,
-                  fontSize: '0.875rem',
-                  fontWeight: isActive ? 600 : 400,
-                  color: isActive ? 'var(--accent)' : 'var(--nav-text)',
-                  background: isActive ? 'var(--accent-dim)' : 'transparent',
-                  transition: 'color 0.15s, background 0.15s',
-                  textDecoration: 'none',
-                })}
-              >
+              <NavLink to={to} end={to === '/'} style={linkStyle}>
                 {label}
               </NavLink>
             </li>
           ))}
         </ul>
+
+        {/* Hamburger button (mobile only) */}
+        <button
+          className="nav-hamburger"
+          onClick={() => setIsOpen((o) => !o)}
+          aria-label={isOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isOpen}
+        >
+          {isOpen ? <XIcon /> : <HamburgerIcon />}
+        </button>
       </div>
+
+      {/* Mobile dropdown */}
+      {isOpen && (
+        <div className="nav-mobile-menu">
+          {links.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              onClick={() => setIsOpen(false)}
+              style={({ isActive }) => ({
+                ...linkStyle({ isActive }),
+                padding: '0.6rem 0.75rem',
+                fontSize: '1rem',
+              })}
+            >
+              {label}
+            </NavLink>
+          ))}
+        </div>
+      )}
     </nav>
+  )
+}
+
+function HamburgerIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <line x1="3" y1="6" x2="19" y2="6" />
+      <line x1="3" y1="11" x2="19" y2="11" />
+      <line x1="3" y1="16" x2="19" y2="16" />
+    </svg>
+  )
+}
+
+function XIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <line x1="4" y1="4" x2="18" y2="18" />
+      <line x1="18" y1="4" x2="4" y2="18" />
+    </svg>
   )
 }
