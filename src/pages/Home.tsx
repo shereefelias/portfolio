@@ -30,8 +30,7 @@ export default function Home() {
           <strong style={{ color: 'var(--text-h)', fontWeight: 700 }}>Citigroup</strong>.
           {' '}Director of Engineering at{' '}
           <strong style={{ color: 'var(--text-h)', fontWeight: 700 }}>Fitch Ratings</strong>,
-          {' '}directing a 30-person, 5-squad global organization through
-          the AI and cloud transformation era.
+          {' '}driving AI and cloud transformation across global enterprise platforms.
         </p>
 
         {/* Employer credential bar */}
