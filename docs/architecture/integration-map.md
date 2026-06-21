@@ -1,16 +1,20 @@
 # Integration Map
 
-**Generated**: 2026-06-11  
+**Generated**: 2026-06-11
+**Last updated**: 2026-06-21
 **Track**: Brownfield
 
 ## External Services
 
 | Service | Integration Point | Protocol | Auth | Status |
 |---------|------------------|----------|------|--------|
-| Formspree | `src/pages/Contact.tsx:18` | HTTPS POST (JSON) | None (public endpoint) | **Placeholder** — must replace `PLACEHOLDER_ENDPOINT` |
-| GitHub Pages | `.github/workflows/deploy.yml` | Git push to `gh-pages` branch | `GITHUB_TOKEN` (Actions secret) | Active |
-| Cloudflare | DNS CNAME record | DNS | Cloudflare account | Pending setup |
-| LinkedIn | `src/pages/Home.tsx:62` | Static link (`href`) | None | Active |
+| GitHub Pages | `.github/workflows/deploy.yml` | Official Pages Actions (artifact upload + deploy) | `GITHUB_TOKEN` / OIDC (`id-token: write`) | Active |
+| Cloudflare | DNS CNAME record | DNS | Cloudflare account | Active |
+| Umami analytics | `index.html` (`insights.westfieldnexus.com/script.js`) | Script tag | `data-website-id` | Active |
+| Umami session recorder | `index.html` (`insights.westfieldnexus.com/recorder.js`) | Script tag (15% sample, moderate masking) | `data-website-id` | Active |
+| cal.com | `App.tsx` footer, `Home.tsx` CTA | Static link (`href`) | None | Active |
+| LinkedIn | `App.tsx` footer, `About.tsx` | Static link (`href`) | None | Active |
+| Email (mailto) | `App.tsx` footer, `About.tsx` | `mailto:` link | None | Active |
 
 ## Build-Time Integrations
 
@@ -29,13 +33,11 @@
 
 ## No Backend — Static Constraints
 
-All data is currently hardcoded in source files. Future integrations that would require a backend:
+All data is currently hardcoded in source files. Contact is link-only (mailto / LinkedIn / cal.com) — there is no form and no form backend. Future integrations that would require a backend:
 - Dynamic project/blog data → would need a headless CMS (Contentful, Sanity) or GitHub-backed JSON
-- Contact form responses → currently Formspree handles storage; a custom backend would enable email notifications
-- Analytics → can add Cloudflare Web Analytics (privacy-first, no JS) via Cloudflare dashboard
+- A contact form (if ever added) → would need Formspree or similar, since the site is static
+- Additional analytics → Umami is already wired up; Cloudflare Web Analytics could be added via the Cloudflare dashboard
 
 ## Pending Actions
 
-1. **Replace Formspree placeholder** — `src/pages/Contact.tsx:3`: sign up at formspree.io, create form, replace `https://formspree.io/f/placeholder`
-2. **Set up Cloudflare CNAME** — Add `CNAME portfolio → shereefelias.github.io` in Cloudflare DNS
-3. **Enable GitHub Pages** — Repo Settings > Pages > Source: `gh-pages` branch, root `/`
+None outstanding. Deploy (GitHub Pages via Actions), DNS (Cloudflare CNAME), and analytics (Umami) are all live.

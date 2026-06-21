@@ -39,21 +39,22 @@ export default function About() {
               Shereef Elias
             </h1>
             <p style={{ fontSize: '1rem', color: 'var(--accent)', fontWeight: 600, margin: 0 }}>
-              Engineering Manager · AWS Certified · PMP · AI-Driven &amp; Cloud-Native
+              Engineering Manager · AI Evangelist · AWS Certified · PMP
             </p>
           </div>
 
           <p style={{ fontSize: '1rem', lineHeight: 1.8, color: 'var(--text)', margin: 0 }}>
             20+ years building and scaling global engineering organizations across financial services.
-            Currently leading a <strong style={{ color: 'var(--text-h)' }}>30-person, 5-squad organization at Fitch Ratings</strong> through
-            5 direct-report engineering managers — spanning full-stack development, data pipeline engineering,
+            Currently leading a <strong style={{ color: 'var(--text-h)' }}>30+ engineer organization at Fitch Ratings</strong> that
+            operates follow-the-sun across global time zones — spanning full-stack development, data pipeline engineering,
             ML/AI, and cloud architecture across Sovereigns, Structured Finance, Public Finance,
             Surveillance, and Cross-Sector platforms.
           </p>
 
           <p style={{ fontSize: '1rem', lineHeight: 1.8, color: 'var(--text)', margin: 0 }}>
-            Originated the tribe's <strong style={{ color: 'var(--text-h)' }}>AI agent marketplace (14 agents, 93 skills)</strong> — adopted
-            across all squads, compressing legacy system analysis from days to hours and delivery
+            As the organization's <strong style={{ color: 'var(--text-h)' }}>AI Evangelist</strong>, originated the tribe's
+            AI agent marketplace (14 agents, 93 skills) — adopted
+            org-wide, compressing legacy system analysis from days to hours and delivery
             timelines from months to weeks. Hands-on where it matters most: architectural direction,
             design governance, POCs, and the organization's hardest technical problems.
           </p>
@@ -165,13 +166,13 @@ const career: TimelineItem[] = [
     period: '2021 – Present',
     title: 'Director, Engineering Manager — Ratings Workflow Solutions',
     subtitle: 'Fitch Ratings',
-    summary: 'Lead a 30-person, 5-squad global organization through 5 direct-report engineering managers. Own platform strategy, multi-year modernization roadmaps, and end-to-end ratings workflow delivery across Sovereigns, Structured Finance, Public Finance, Surveillance, and Cross-Sector platforms.',
+    summary: 'Lead a 30+ engineer global organization operating follow-the-sun across time zones. Own platform strategy, multi-year modernization roadmaps, and end-to-end ratings workflow delivery across Sovereigns, Structured Finance, Public Finance, Surveillance, and Cross-Sector platforms.',
   },
   {
     period: '2017 – 2021',
     title: 'Associate Director, Team Lead — Ratings Workflow Solutions',
     subtitle: 'Fitch Ratings',
-    summary: 'Led the CMBS platform modernization replacing Rockport/Trepp vendor infrastructure with an in-house hybrid cloud serverless platform — saving $1M+/year and improving analyst productivity by 30%. Built and scaled engineering squads across regions.',
+    summary: 'Led the CMBS platform modernization replacing Rockport/Trepp vendor infrastructure with an in-house hybrid cloud serverless platform — saving $1M+/year and improving analyst productivity by 30%. Built and scaled engineering teams across regions.',
   },
   {
     period: '2014 – 2017',

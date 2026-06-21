@@ -11,7 +11,7 @@ const links: NavItem[] = [
   { to: '/', label: 'Home' },
   { to: '/work', label: 'Work' },
   { to: '/advisory', label: 'Advisory' },
-  { to: '/viz', label: 'Infographics' },
+  { to: '/infographics', label: 'Infographics' },
   { to: '/system-design', label: 'System Design' },
   { to: '/about', label: 'About' },
 ]

@@ -1,16 +1,38 @@
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { createBrowserRouter, RouterProvider, Outlet, useLocation } from 'react-router-dom'
 import logo from './assets/logo.png'
 import Nav from './components/Nav'
 import Home from './pages/Home'
 import Work from './pages/Work'
-import Viz from './pages/Viz'
+import Infographics from './pages/Infographics'
 import SystemDesign from './pages/SystemDesign'
 import About from './pages/About'
 import Advisory from './pages/Advisory'
+import { routeMeta, DEFAULT_META } from './seo'
+
+// Keeps document.title and the meta description in sync on client-side
+// navigation. (Per-route static HTML with the same tags is also emitted at
+// build time by the seoPrerender plugin in vite.config.ts.)
+function RouteMeta() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    const meta = routeMeta[pathname] ?? DEFAULT_META
+    document.title = meta.title
+    let tag = document.querySelector('meta[name="description"]')
+    if (!tag) {
+      tag = document.createElement('meta')
+      tag.setAttribute('name', 'description')
+      document.head.appendChild(tag)
+    }
+    tag.setAttribute('content', meta.description)
+  }, [pathname])
+  return null
+}
 
 function Layout() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <RouteMeta />
       <Nav />
       <div style={{ flex: 1 }}>
         <Outlet />
@@ -71,7 +93,7 @@ const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'work', element: <Work /> },
       { path: 'advisory', element: <Advisory /> },
-      { path: 'viz', element: <Viz /> },
+      { path: 'infographics', element: <Infographics /> },
       { path: 'system-design', element: <SystemDesign /> },
       { path: 'about', element: <About /> },
     ],

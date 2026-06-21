@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export default function Home() {
   return (
     <main className="page-main-home">
@@ -8,7 +10,7 @@ export default function Home() {
           fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700,
           letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 1.75rem',
         }}>
-          Director of Engineering · Financial Services · New York
+          Director of Engineering · AI Evangelist · Financial Services · New York
         </p>
 
         {/* Name */}
@@ -33,58 +35,6 @@ export default function Home() {
           {' '}driving AI and cloud transformation across global enterprise platforms.
         </p>
 
-        {/* Employer credential bar */}
-        <div style={{
-          borderTop: '1px solid var(--border)',
-          borderBottom: '1px solid var(--border)',
-          padding: '1.75rem 0',
-          marginBottom: '3.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.5rem',
-        }}>
-          {[
-            {
-              company: 'Citigroup',
-              role: 'Vice President, Application Manager',
-              period: '2006 – 2014',
-              note: '5 promotions · AML surveillance · Compliance analytics · Wholesale credit risk',
-            },
-            {
-              company: 'Fitch Ratings',
-              role: 'Director of Engineering — Ratings Workflow Solutions',
-              period: '2014 – Present',
-              note: '30 engineers · 5 global squads · 5 direct-report managers · AI & cloud modernization',
-            },
-          ].map(({ company, role, period, note }) => (
-            <div key={company} style={{ display: 'flex', gap: '1.25rem', alignItems: 'stretch' }}>
-              <div style={{ width: 3, background: 'var(--accent)', borderRadius: 2, flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  display: 'flex', gap: '1rem', alignItems: 'baseline',
-                  flexWrap: 'wrap', marginBottom: '0.25rem',
-                }}>
-                  <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-h)' }}>
-                    {company}
-                  </span>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text)' }}>
-                    {role}
-                  </span>
-                  <span style={{
-                    fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 600,
-                    marginLeft: 'auto', whiteSpace: 'nowrap',
-                  }}>
-                    {period}
-                  </span>
-                </div>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text)', margin: 0, opacity: 0.7 }}>
-                  {note}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* Three pillars */}
         <div style={{
           display: 'grid',
@@ -103,11 +53,11 @@ export default function Home() {
             },
             {
               label: 'Organization at Scale',
-              body: '30 engineers. 5 global squads. 5 direct-report managers. End-to-end ownership: hiring, architecture governance, delivery roadmaps, and the culture that makes it run.',
+              body: 'A 30+ engineer organization operating follow-the-sun across global time zones. End-to-end ownership: hiring, architecture governance, delivery roadmaps, and the culture that makes it run.',
             },
             {
               label: 'AI & Cloud Leadership',
-              body: 'Originated a 14-agent, 93-skill internal AI marketplace — adopted across every squad. Cut legacy analysis from days to hours. $1M+/year in cloud savings delivered.',
+              body: 'Originated a 14-agent, 93-skill internal AI marketplace — adopted org-wide. Cut legacy analysis from days to hours. $1M+/year in cloud savings delivered.',
             },
           ].map(({ label, body }) => (
             <div key={label} style={{
@@ -150,14 +100,14 @@ export default function Home() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0, flexWrap: 'wrap' }}>
-            <a href="/work" style={{
+            <Link to="/work" style={{
               fontSize: '0.875rem', padding: '0.65rem 1.25rem', borderRadius: 8,
               border: '1px solid var(--accent-border)',
               background: 'var(--accent-dim)', color: 'var(--accent)',
               textDecoration: 'none', fontWeight: 600,
             }}>
               View Work
-            </a>
+            </Link>
             <a href="https://cal.com/shereefelias/30min" target="_blank" rel="noreferrer" style={{
               fontSize: '0.875rem', padding: '0.65rem 1.25rem', borderRadius: 8,
               background: 'var(--accent)', color: '#0f0f0f',
@@ -178,12 +128,7 @@ export default function Home() {
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
             {[
-              'AWS Solutions Architect', 'Advanced Developing on AWS', 'Architecting on AWS',
-              'Building Data Lakes on AWS', 'PMP', 'Azure Fundamentals', 'Azure Data Fundamentals',
-              'Power BI for Managers', 'MongoDB Atlas', 'MongoDB Developer Foundation',
-              'Confluent Kafka Developer', 'Domain-Driven Design', 'ITIL v3 Foundation',
-              'Apache Airflow', 'Implementing CI/CD with GitHub Actions', 'Argo CD',
-              'Talend Advanced Data Integration', 'Talend Big Data',
+              'AWS Solutions Architect', 'PMP — Project Management Professional (PMI)',
             ].map((cert) => (
               <span key={cert} style={{
                 fontSize: '0.72rem', padding: '0.2rem 0.55rem', borderRadius: 20,
