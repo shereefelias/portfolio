@@ -1,4 +1,5 @@
 import photo from '../assets/portfolio_pic.jpg'
+import careerImpact from '../assets/engineering-leadership-career-impact.webp'
 
 export default function About() {
   return (
@@ -72,6 +73,23 @@ export default function About() {
           Career
         </h2>
         <Timeline items={career} dotFilled />
+      </section>
+
+      {/* Career Impact Infographic */}
+      <section style={{ marginBottom: '4rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-h)', margin: '0 0 1rem' }}>
+          Engineering Leadership Impact
+        </h2>
+        <div style={{
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 12, padding: '1.5rem', overflow: 'hidden',
+        }}>
+          <img
+            src={careerImpact}
+            alt="Engineering Leadership Career Impact infographic"
+            style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 8 }}
+          />
+        </div>
       </section>
 
       {/* Education Timeline */}

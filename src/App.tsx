@@ -6,6 +6,7 @@ import Work from './pages/Work'
 import Viz from './pages/Viz'
 import SystemDesign from './pages/SystemDesign'
 import About from './pages/About'
+import Advisory from './pages/Advisory'
 
 function Layout() {
   return (
@@ -69,6 +70,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'work', element: <Work /> },
+      { path: 'advisory', element: <Advisory /> },
       { path: 'viz', element: <Viz /> },
       { path: 'system-design', element: <SystemDesign /> },
       { path: 'about', element: <About /> },
