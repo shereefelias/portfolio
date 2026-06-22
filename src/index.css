@@ -244,3 +244,20 @@ a:hover {
     padding: 0.75rem 0.875rem;
   }
 }
+
+/* Infographics cards — subtle hover lift (ByteByteGo-style) */
+.viz-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.viz-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+@media (prefers-reduced-motion: reduce) {
+  .viz-card {
+    transition: none;
+  }
+  .viz-card:hover {
+    transform: none;
+  }
+}

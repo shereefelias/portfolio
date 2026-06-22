@@ -29,7 +29,8 @@ test.describe('Navigation', () => {
   test('infographics page renders D3 chart', async ({ page }) => {
     await page.goto('/infographics')
     await expect(page.getByRole('heading', { name: 'Infographics' })).toBeVisible()
-    await expect(page.getByLabel('Bar chart showing skill proficiency scores')).toBeVisible()
+    await expect(page.getByLabel(/Flow diagram/)).toBeVisible()
+    await expect(page.getByLabel(/Technology radar/)).toBeVisible()
   })
 
   test('system design page loads', async ({ page }) => {

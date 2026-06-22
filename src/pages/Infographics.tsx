@@ -10,6 +10,58 @@ const C = {
   grid: '#1e3a5f',
   track: '#1a3a5c',
   muted: '#475569',
+  node: '#112240',
+}
+
+const SVGNS = 'http://www.w3.org/2000/svg'
+const XLINKNS = 'http://www.w3.org/1999/xlink'
+const REDUCE_MOTION =
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false
+
+// ByteByteGo-style flow dot: a circle that rides a path via <animateMotion>.
+// Built with createElementNS so the SMIL elements land in the SVG namespace.
+function flowDot(
+  parent: SVGGElement,
+  pathId: string,
+  opts: { dur?: string; begin?: string; r?: number; color?: string } = {},
+) {
+  if (REDUCE_MOTION) return
+  const { dur = '1.8s', begin = '0s', r = 4, color = C.accent } = opts
+  const dot = document.createElementNS(SVGNS, 'circle')
+  dot.setAttribute('r', String(r))
+  dot.setAttribute('fill', color)
+  const motion = document.createElementNS(SVGNS, 'animateMotion')
+  motion.setAttribute('dur', dur)
+  motion.setAttribute('begin', begin)
+  motion.setAttribute('repeatCount', 'indefinite')
+  const mpath = document.createElementNS(SVGNS, 'mpath')
+  mpath.setAttributeNS(XLINKNS, 'xlink:href', `#${pathId}`)
+  mpath.setAttribute('href', `#${pathId}`)
+  motion.appendChild(mpath)
+  dot.appendChild(motion)
+  parent.appendChild(dot)
+}
+
+function addArrowMarker(
+  sel: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+  id: string,
+  color: string,
+) {
+  sel
+    .append('defs')
+    .append('marker')
+    .attr('id', id)
+    .attr('viewBox', '0 0 10 10')
+    .attr('refX', 8)
+    .attr('refY', 5)
+    .attr('markerWidth', 6)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto-start-reverse')
+    .append('path')
+    .attr('d', 'M0,0 L10,5 L0,10 z')
+    .attr('fill', color)
 }
 
 type Draw = (svg: SVGSVGElement, width: number) => void
@@ -43,6 +95,7 @@ function Chart({ draw, ariaLabel }: { draw: Draw; ariaLabel: string }) {
 function VizCard({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <section
+      className="viz-card"
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--border)',
@@ -59,7 +112,7 @@ function VizCard({ title, subtitle, children }: { title: string; subtitle: strin
 }
 
 /* ------------------------------------------------------------------ */
-/* 1. Quantified impact — before → after on a real time axis          */
+/* 1. Quantified impact — before → after with a flowing dot           */
 /* ------------------------------------------------------------------ */
 
 const TIME_UNITS = ['Months', 'Weeks', 'Days', 'Hours']
@@ -79,7 +132,7 @@ const impactItems: ImpactItem[] = [
 const drawImpact: Draw = (svg, width) => {
   const sel = d3.select(svg)
   sel.selectAll('*').remove()
-  const margin = { top: 22, right: 64, bottom: 34, left: 168 }
+  const margin = { top: 22, right: 64, bottom: 36, left: 168 }
   const w = Math.max(width, 320)
   const innerW = w - margin.left - margin.right
   const rowH = 50
@@ -97,38 +150,38 @@ const drawImpact: Draw = (svg, width) => {
     .attr('stroke', C.grid).attr('stroke-dasharray', '3,3')
 
   g.selectAll('.tul').data(TIME_UNITS).enter().append('text')
-    .attr('x', (d) => X(d)).attr('y', innerH + 20).attr('text-anchor', 'middle')
+    .attr('x', (d) => X(d)).attr('y', innerH + 22).attr('text-anchor', 'middle')
     .attr('fill', C.text).attr('font-size', '11px').text((d) => d)
 
-  g.append('text').attr('x', innerW).attr('y', innerH + 20).attr('text-anchor', 'start')
-    .attr('dx', 8).attr('fill', C.muted).attr('font-size', '10px').text('faster →')
+  g.append('text').attr('x', innerW).attr('y', innerH + 22).attr('dx', 10)
+    .attr('fill', C.muted).attr('font-size', '10px').text('faster →')
 
   const rows = g.selectAll('.row').data(impactItems).enter().append('g')
     .attr('transform', (d) => `translate(0,${(y(d.label) ?? 0) + y.bandwidth() / 2})`)
 
-  rows.append('line')
-    .attr('x1', (d) => X(d.from)).attr('y1', 0).attr('y2', 0).attr('x2', (d) => X(d.from))
-    .attr('stroke', C.accent).attr('stroke-width', 3).attr('opacity', 0.55)
-    .transition().duration(700).attr('x2', (d) => X(d.to))
+  rows.each(function (this: SVGGElement, d, i) {
+    const row = d3.select(this)
+    const id = `impact-edge-${i}`
+    row.append('path').attr('id', id).attr('fill', 'none')
+      .attr('d', `M${X(d.from)},0 L${X(d.to)},0`)
+      .attr('stroke', C.accent).attr('stroke-width', 2.5).attr('stroke-dasharray', '2 5').attr('opacity', 0.7)
+    flowDot(this, id, { dur: '1.7s', begin: `${i * 0.3}s`, r: 4 })
+  })
 
   rows.append('circle').attr('cx', (d) => X(d.from)).attr('cy', 0).attr('r', 5)
     .attr('fill', C.track).attr('stroke', C.muted).attr('stroke-width', 2)
-
-  rows.append('circle').attr('cx', (d) => X(d.from)).attr('cy', 0).attr('r', 0).attr('fill', C.accent)
-    .transition().duration(700).attr('cx', (d) => X(d.to)).attr('r', 6)
+  rows.append('circle').attr('cx', (d) => X(d.to)).attr('cy', 0).attr('r', 6).attr('fill', C.accent)
 
   rows.append('text').attr('x', -14).attr('y', 0).attr('dy', '0.32em').attr('text-anchor', 'end')
     .attr('fill', C.textH).attr('font-size', '12.5px').attr('font-weight', 600).text((d) => d.label)
-
   rows.append('text').attr('x', (d) => X(d.from)).attr('y', -13).attr('text-anchor', 'middle')
     .attr('fill', C.text).attr('font-size', '10.5px').text((d) => d.from)
-
   rows.append('text').attr('x', (d) => X(d.to)).attr('y', -13).attr('text-anchor', 'middle')
     .attr('fill', C.accent).attr('font-size', '10.5px').attr('font-weight', 600).text((d) => d.to)
 }
 
 /* ------------------------------------------------------------------ */
-/* 2. Career trajectory timeline                                      */
+/* 2. Career trajectory timeline — with a tracer dot                  */
 /* ------------------------------------------------------------------ */
 
 interface Tenure {
@@ -172,7 +225,6 @@ const drawCareer: Draw = (svg, width) => {
   const x = d3.scaleLinear().domain([2006, NOW_YEAR]).range([0, innerW])
   const midY = innerH / 2
 
-  // tenure bands
   g.selectAll('.band').data(tenures).enter().append('rect')
     .attr('x', (d) => x(d.start)).attr('y', midY - 11)
     .attr('width', (d) => x(d.end) - x(d.start)).attr('height', 22).attr('rx', 6)
@@ -183,27 +235,24 @@ const drawCareer: Draw = (svg, width) => {
     .attr('text-anchor', 'middle').attr('fill', C.textH).attr('font-size', '11px').attr('font-weight', 600)
     .text((d) => d.company)
 
-  // axis ticks
+  // invisible track for the tracer dot (left → right = progression through time)
+  g.append('path').attr('id', 'career-track').attr('fill', 'none').attr('stroke', 'none')
+    .attr('d', `M0,${midY} L${innerW},${midY}`)
+  flowDot(g.node() as SVGGElement, 'career-track', { dur: '3.4s', r: 4.5 })
+
   const ticks = [2006, 2010, 2014, 2018, 2022, NOW_YEAR]
   g.selectAll('.tick').data(ticks).enter().append('text')
     .attr('x', (d) => x(d)).attr('y', innerH + 6).attr('text-anchor', 'middle')
     .attr('fill', C.muted).attr('font-size', '10px').text((d) => String(d))
 
-  // milestone markers + labels
   const m = g.selectAll('.ms').data(milestones).enter().append('g')
     .attr('transform', (d) => `translate(${x(d.year)},${midY})`)
-
   m.append('circle').attr('r', 0).attr('fill', C.accent).attr('stroke', 'var(--surface)').attr('stroke-width', 2)
     .transition().duration(500).delay((_, i) => i * 90).attr('r', 4.5)
-
-  m.append('line')
-    .attr('x1', 0).attr('x2', 0)
-    .attr('y1', (d) => (d.side === 'above' ? -11 : 11))
-    .attr('y2', (d) => (d.side === 'above' ? -22 : 22))
+  m.append('line').attr('x1', 0).attr('x2', 0)
+    .attr('y1', (d) => (d.side === 'above' ? -11 : 11)).attr('y2', (d) => (d.side === 'above' ? -22 : 22))
     .attr('stroke', C.muted)
-
-  m.append('text')
-    .attr('x', 0).attr('y', (d) => (d.side === 'above' ? -27 : 33))
+  m.append('text').attr('x', 0).attr('y', (d) => (d.side === 'above' ? -27 : 33))
     .attr('text-anchor', 'middle').attr('fill', C.textH).attr('font-size', '11px').attr('font-weight', 600)
     .text((d) => d.label)
 }
@@ -216,12 +265,11 @@ const RADAR_QUADRANTS = ['Platforms & Cloud', 'Data & Streaming', 'Languages & A
 const RADAR_RINGS = ['Adopt', 'Trial', 'Assess']
 
 interface Blip {
-  q: number // quadrant index
-  ring: number // 0 Adopt, 1 Trial, 2 Assess
+  q: number
+  ring: number
   name: string
 }
 
-// Ordered by quadrant so legend numbers are contiguous per quadrant.
 const radarBlips: Blip[] = [
   { q: 0, ring: 0, name: 'AWS EKS' },
   { q: 0, ring: 0, name: 'Kubernetes' },
@@ -257,20 +305,16 @@ const drawRadar: Draw = (svg, width) => {
   const ringEdges = [0, R * 0.46, R * 0.74, R]
   const g = sel.append('g').attr('transform', `translate(${cx},${cy})`)
 
-  // ring circles
   g.selectAll('.ring').data([1, 2, 3]).enter().append('circle')
     .attr('r', (d) => ringEdges[d]).attr('fill', 'none').attr('stroke', C.grid)
 
-  // quadrant axes
   g.append('line').attr('x1', -R).attr('x2', R).attr('y1', 0).attr('y2', 0).attr('stroke', C.grid)
   g.append('line').attr('x1', 0).attr('x2', 0).attr('y1', -R).attr('y2', R).attr('stroke', C.grid)
 
-  // ring labels along the top axis
   g.selectAll('.rl').data(RADAR_RINGS).enter().append('text')
     .attr('x', 4).attr('y', (_, i) => -(ringEdges[i] + ringEdges[i + 1]) / 2).attr('dy', '0.32em')
     .attr('fill', C.muted).attr('font-size', '9px').text((d) => d)
 
-  // quadrant labels at the corners
   const corners: [number, number, string][] = [
     [R, -R + 4, 'start'], [R, R, 'start'], [-R, R, 'end'], [-R, -R + 4, 'end'],
   ]
@@ -279,7 +323,6 @@ const drawRadar: Draw = (svg, width) => {
     .attr('text-anchor', (_, i) => corners[i][2]).attr('fill', C.text)
     .attr('font-size', '10.5px').attr('font-weight', 600).text((d) => d)
 
-  // place blips: spread within each (quadrant, ring) group
   const counts: Record<string, number> = {}
   const totals: Record<string, number> = {}
   radarBlips.forEach((b) => { const k = `${b.q}-${b.ring}`; totals[k] = (totals[k] ?? 0) + 1 })
@@ -306,11 +349,10 @@ const drawRadar: Draw = (svg, width) => {
 }
 
 /* ------------------------------------------------------------------ */
-/* 4. AI marketplace adoption curve                                   */
+/* 4. AI marketplace adoption curve — with a flowing dot              */
 /* ------------------------------------------------------------------ */
 
-// Cumulative trajectory of the internal AI marketplace. Endpoints are real
-// (14 agents, 93 skills, org-wide); the ramp between is illustrative.
+// Endpoints are real (14 agents, 93 skills, org-wide); the ramp is illustrative.
 const adoptionPts: [number, number][] = [
   [2023, 0], [2023.6, 8], [2024.2, 26], [2024.8, 52], [2025.4, 78], [2026, 100],
 ]
@@ -323,7 +365,7 @@ const adoptionPhases: [number, string][] = [
 const drawAdoption: Draw = (svg, width) => {
   const sel = d3.select(svg)
   sel.selectAll('*').remove()
-  const margin = { top: 22, right: 30, bottom: 30, left: 18 }
+  const margin = { top: 26, right: 30, bottom: 30, left: 18 }
   const w = Math.max(width, 320)
   const innerW = w - margin.left - margin.right
   const innerH = 180
@@ -334,38 +376,87 @@ const drawAdoption: Draw = (svg, width) => {
   const x = d3.scaleLinear().domain([2023, 2026]).range([0, innerW])
   const y = d3.scaleLinear().domain([0, 100]).range([innerH, 0])
 
-  // baseline
   g.append('line').attr('x1', 0).attr('x2', innerW).attr('y1', innerH).attr('y2', innerH).attr('stroke', C.grid)
 
   const area = d3.area<[number, number]>().x((d) => x(d[0])).y0(innerH).y1((d) => y(d[1])).curve(d3.curveBasis)
   const line = d3.line<[number, number]>().x((d) => x(d[0])).y((d) => y(d[1])).curve(d3.curveBasis)
 
   g.append('path').datum(adoptionPts).attr('fill', C.accentSoft).attr('d', area)
-  const path = g.append('path').datum(adoptionPts).attr('fill', 'none')
+  const path = g.append('path').datum(adoptionPts).attr('id', 'adoption-line').attr('fill', 'none')
     .attr('stroke', C.accent).attr('stroke-width', 2.5).attr('d', line)
 
   const len = (path.node() as SVGPathElement).getTotalLength()
   path.attr('stroke-dasharray', `${len} ${len}`).attr('stroke-dashoffset', len)
     .transition().duration(1100).attr('stroke-dashoffset', 0)
+    .on('end', () => flowDot(g.node() as SVGGElement, 'adoption-line', { dur: '2.4s', r: 4.5 }))
 
-  // phase annotations
   adoptionPhases.forEach(([yr, label]) => {
     g.append('line').attr('x1', x(yr)).attr('x2', x(yr)).attr('y1', innerH).attr('y2', innerH + 6).attr('stroke', C.muted)
     g.append('text').attr('x', x(yr)).attr('y', innerH + 18).attr('text-anchor', 'middle')
       .attr('fill', C.muted).attr('font-size', '10px').text(label)
   })
 
-  // year ticks
   ;[2023, 2024, 2025, 2026].forEach((yr) => {
-    g.append('text').attr('x', x(yr)).attr('y', -8).attr('text-anchor', 'middle')
+    g.append('text').attr('x', x(yr)).attr('y', -10).attr('text-anchor', 'middle')
       .attr('fill', C.grid).attr('font-size', '9px').text(String(yr))
   })
 
-  // endpoint callout
   const last = adoptionPts[adoptionPts.length - 1]
   g.append('circle').attr('cx', x(last[0])).attr('cy', y(last[1])).attr('r', 5).attr('fill', C.accent)
   g.append('text').attr('x', x(last[0])).attr('y', y(last[1]) - 12).attr('text-anchor', 'end')
     .attr('fill', C.textH).attr('font-size', '12px').attr('font-weight', 700).text('14 agents · 93 skills')
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. AI-assisted SDLC flow — ByteByteGo-style nodes + moving dots     */
+/* ------------------------------------------------------------------ */
+
+const flowNodes: { title: string; sub: string }[] = [
+  { title: 'Codebase', sub: 'Legacy + greenfield' },
+  { title: '14 AI Agents', sub: 'Marketplace · 93 skills' },
+  { title: 'Generate', sub: 'Code · docs · tests' },
+  { title: 'Governance Review', sub: 'AI-SDLC guardrails' },
+  { title: 'Ship to Production', sub: 'Argo CD · GitOps' },
+]
+
+const drawFlow: Draw = (svg, width) => {
+  const sel = d3.select(svg)
+  sel.selectAll('*').remove()
+  const margin = { top: 10, right: 20, bottom: 10, left: 20 }
+  const w = Math.max(width, 320)
+  const innerW = w - margin.left - margin.right
+  const nodeW = Math.min(innerW, 340)
+  const nodeH = 52
+  const gap = 30
+  const n = flowNodes.length
+  const height = margin.top + margin.bottom + n * nodeH + (n - 1) * gap
+  sel.attr('width', w).attr('height', height)
+  addArrowMarker(sel, 'arrow-flow', C.accent)
+  const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+
+  const cx = innerW / 2
+  const xLeft = cx - nodeW / 2
+  const yOf = (i: number) => i * (nodeH + gap)
+
+  for (let i = 0; i < n - 1; i++) {
+    const id = `flow-edge-${i}`
+    g.append('path').attr('id', id).attr('fill', 'none')
+      .attr('d', `M${cx},${yOf(i) + nodeH} L${cx},${yOf(i + 1)}`)
+      .attr('stroke', C.accent).attr('stroke-width', 2.5).attr('stroke-dasharray', '2 5')
+      .attr('marker-end', 'url(#arrow-flow)').attr('opacity', 0.75)
+    flowDot(g.node() as SVGGElement, id, { dur: '1.6s', begin: `${i * 0.25}s`, r: 4 })
+  }
+
+  flowNodes.forEach((node, i) => {
+    const ny = yOf(i)
+    const grp = g.append('g')
+    grp.append('rect').attr('x', xLeft).attr('y', ny).attr('width', nodeW).attr('height', nodeH).attr('rx', 10)
+      .attr('fill', C.node).attr('stroke', C.accent).attr('stroke-width', 1.5)
+    grp.append('text').attr('x', cx).attr('y', ny + nodeH / 2 - 4).attr('text-anchor', 'middle')
+      .attr('fill', C.textH).attr('font-size', '13px').attr('font-weight', 700).text(node.title)
+    grp.append('text').attr('x', cx).attr('y', ny + nodeH / 2 + 13).attr('text-anchor', 'middle')
+      .attr('fill', C.text).attr('font-size', '10.5px').text(node.sub)
+  })
 }
 
 /* ------------------------------------------------------------------ */
@@ -395,11 +486,11 @@ export default function Infographics() {
           Infographics
         </h1>
         <p style={{ color: 'var(--text)', maxWidth: 560, margin: 0 }}>
-          Outcomes, scale, and trajectory — visualized from real work, built with D3.js.
+          Outcomes, scale, and trajectory — visualized from real work, built with D3.js. Dots flow along the
+          connectors to show direction.
         </p>
       </header>
 
-      {/* Stat strip */}
       <div
         style={{
           display: 'grid',
@@ -423,7 +514,15 @@ export default function Infographics() {
       </div>
 
       <VizCard title="Quantified Impact" subtitle="Before → after on real initiatives — time compresses left to right.">
-        <Chart draw={drawImpact} ariaLabel="Before and after time-compression for legacy analysis, portal releases, and delivery timelines" />
+        <Chart draw={drawImpact} ariaLabel="Before and after time compression for legacy analysis, portal releases, and delivery timelines" />
+      </VizCard>
+
+      <VizCard title="AI-Assisted SDLC" subtitle="How work flows through the internal AI toolchain — dots travel along each step.">
+        <Chart draw={drawFlow} ariaLabel="Flow diagram: codebase to AI agents to generation to governance review to production" />
+      </VizCard>
+
+      <VizCard title="AI Marketplace Adoption" subtitle="Cumulative growth to org-wide adoption (endpoints actual; ramp illustrative).">
+        <Chart draw={drawAdoption} ariaLabel="Growth curve of the internal AI marketplace reaching 14 agents and 93 skills" />
       </VizCard>
 
       <VizCard title="Career Trajectory" subtitle="20 years across Citigroup and Fitch Ratings — Engineer to Director.">
@@ -454,13 +553,6 @@ export default function Infographics() {
             </div>
           ))}
         </div>
-      </VizCard>
-
-      <VizCard
-        title="AI Marketplace Adoption"
-        subtitle="Cumulative growth of the internal AI agent marketplace to org-wide adoption (endpoints actual; ramp illustrative)."
-      >
-        <Chart draw={drawAdoption} ariaLabel="Growth curve of the internal AI marketplace reaching 14 agents and 93 skills" />
       </VizCard>
 
       {/* Tech Stack inventory */}
