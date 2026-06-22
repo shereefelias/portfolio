@@ -5,16 +5,57 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#0f0f0f" />
+    <meta name="theme-color" content="#0d1b2a" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shereef Elias — Portfolio</title>
-    <meta name="description" content="Shereef Elias — software engineer specializing in data visualization, systems design, and full-stack development." />
+
+    <!-- Per-route values below are overwritten at build time by the seoPrerender
+         plugin (vite.config.ts) and at runtime by <RouteMeta> (src/App.tsx). -->
+    <title>Shereef Elias — Director of Engineering</title>
+    <meta name="description" content="Shereef Elias — Director of Engineering in financial services. 20+ years building and scaling global engineering organizations at Fitch Ratings and Citigroup." />
+    <link rel="canonical" href="https://portfolio.westfieldnexus.com/" />
     <meta name="google-site-verification" content="r2hAAOoOf0SNbnXztiIpCBL1fS33ea6Hxgb9mdcaIjA" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Shereef Elias" />
+    <meta property="og:title" content="Shereef Elias — Director of Engineering" />
+    <meta property="og:description" content="Shereef Elias — Director of Engineering in financial services. 20+ years building and scaling global engineering organizations at Fitch Ratings and Citigroup." />
+    <meta property="og:url" content="https://portfolio.westfieldnexus.com/" />
+    <meta property="og:image" content="https://portfolio.westfieldnexus.com/apple-touch-icon.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Shereef Elias — Director of Engineering" />
+    <meta name="twitter:description" content="Shereef Elias — Director of Engineering in financial services. 20+ years building and scaling global engineering organizations at Fitch Ratings and Citigroup." />
+    <meta name="twitter:image" content="https://portfolio.westfieldnexus.com/apple-touch-icon.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Person",
+            "name": "Shereef Elias",
+            "url": "https://portfolio.westfieldnexus.com/",
+            "image": "https://portfolio.westfieldnexus.com/apple-touch-icon.png",
+            "jobTitle": "Director of Engineering",
+            "worksFor": { "@type": "Organization", "name": "Fitch Ratings" },
+            "sameAs": ["https://www.linkedin.com/in/shereefelias/"]
+          },
+          {
+            "@type": "WebSite",
+            "name": "Shereef Elias",
+            "url": "https://portfolio.westfieldnexus.com/"
+          }
+        ]
+      }
+    </script>
+
     <script defer src="https://insights.westfieldnexus.com/script.js" data-website-id="38dbf446-625f-4dd9-b5bd-8d0b3f33a3ec"></script>
     <script defer src="https://insights.westfieldnexus.com/recorder.js" data-website-id="38dbf446-625f-4dd9-b5bd-8d0b3f33a3ec" data-sample-rate="0.15" data-mask-level="moderate" data-max-duration="300000"></script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -4,14 +4,13 @@ test.describe('Navigation', () => {
   test('home page loads with correct heading', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Shereef Elias' })).toBeVisible()
-    await expect(page.getByRole('link', { name: /linkedin/i })).toBeVisible()
   })
 
   test('nav links are present', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('navigation')).toBeVisible()
-    for (const label of ['Work', 'Viz', 'System Design', 'Contact']) {
-      await expect(page.getByRole('link', { name: label })).toBeVisible()
+    for (const label of ['Home', 'Work', 'Advisory', 'Infographics', 'System Design', 'About']) {
+      await expect(page.getByRole('link', { name: label, exact: true })).toBeVisible()
     }
   })
 
@@ -21,22 +20,27 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('article').first()).toBeVisible()
   })
 
-  test('viz page renders D3 chart', async ({ page }) => {
-    await page.goto('/viz')
-    await expect(page.getByRole('heading', { name: 'Visualizations' })).toBeVisible()
+  test('advisory page shows client cards', async ({ page }) => {
+    await page.goto('/advisory')
+    await expect(page.getByRole('heading', { name: 'Advisory' })).toBeVisible()
+    await expect(page.getByRole('article').first()).toBeVisible()
+  })
+
+  test('infographics page renders D3 chart', async ({ page }) => {
+    await page.goto('/infographics')
+    await expect(page.getByRole('heading', { name: 'Infographics' })).toBeVisible()
     await expect(page.getByLabel('Bar chart showing skill proficiency scores')).toBeVisible()
   })
 
   test('system design page loads', async ({ page }) => {
     await page.goto('/system-design')
     await expect(page.getByRole('heading', { name: 'System Design' })).toBeVisible()
+    await expect(page.getByRole('article').first()).toBeVisible()
   })
 
-  test('contact form renders all fields', async ({ page }) => {
-    await page.goto('/contact')
-    await expect(page.getByLabel('Name')).toBeVisible()
-    await expect(page.getByLabel('Email')).toBeVisible()
-    await expect(page.getByLabel('Message')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Send Message' })).toBeVisible()
+  test('about page loads', async ({ page }) => {
+    await page.goto('/about')
+    await expect(page.getByRole('heading', { name: 'Shereef Elias' })).toBeVisible()
+    await expect(page.getByRole('link', { name: /linkedin/i }).first()).toBeVisible()
   })
 })

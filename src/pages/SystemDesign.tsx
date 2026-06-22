@@ -12,8 +12,8 @@ const diagrams: Diagram[] = [
     id: 1,
     title: 'Federated Micro-Frontend Portal Architecture',
     company: 'Fitch Ratings',
-    description: 'EKS-hosted federated portal platform where 5 global squads each manage independent modular portal instances for their business group.',
-    detail: 'Core challenge: 5 squads, 5 business domains, zero cross-team deployment coupling. Solution: each squad owns a portal shell deployed to its own EKS namespace, composed via a shared component registry. No squad can block another\'s release. GitOps via Argo CD drives all deployments with full audit trail.',
+    description: 'EKS-hosted federated portal platform where independent global teams each manage their own modular portal instance for their business group.',
+    detail: 'Core challenge: multiple teams across distinct business domains, zero cross-team deployment coupling. Solution: each team owns a portal shell deployed to its own EKS namespace, composed via a shared component registry. No team can block another\'s release. GitOps via Argo CD drives all deployments with full audit trail.',
     tags: ['AWS EKS', 'Kubernetes', 'Micro-Frontends', 'Argo CD', 'GitOps', 'Module Federation'],
   },
   {

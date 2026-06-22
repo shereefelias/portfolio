@@ -10,7 +10,8 @@ interface NavItem {
 const links: NavItem[] = [
   { to: '/', label: 'Home' },
   { to: '/work', label: 'Work' },
-  { to: '/viz', label: 'Infographics' },
+  { to: '/advisory', label: 'Advisory' },
+  { to: '/infographics', label: 'Infographics' },
   { to: '/system-design', label: 'System Design' },
   { to: '/about', label: 'About' },
 ]

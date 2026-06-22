@@ -12,7 +12,7 @@ portfolio/
 │   └── settings.local.json         ← Claude Code project permissions
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml              ← CI: build + deploy to gh-pages branch
+│       └── deploy.yml              ← CI: build + deploy via official GitHub Pages Actions
 ├── docs/                           ← Quorum SDLC artifacts
 │   ├── architecture/               ← Foundation docs (this directory)
 │   ├── tracker/                    ← Entity status tracking
@@ -32,11 +32,12 @@ portfolio/
 │   ├── components/
 │   │   └── Nav.tsx                 ← Persistent sticky navigation bar
 │   ├── pages/
-│   │   ├── Home.tsx                ← / — Hero, bio, stats, LinkedIn CTA
+│   │   ├── Home.tsx                ← / — Hero, credentials, pillars, cal.com CTA
 │   │   ├── Work.tsx                ← /work — Project card grid
-│   │   ├── Viz.tsx                 ← /viz — D3 data visualizations
+│   │   ├── Advisory.tsx            ← /advisory — Advisory client cards
+│   │   ├── Infographics.tsx        ← /infographics — D3 data viz + tech stack
 │   │   ├── SystemDesign.tsx        ← /system-design — Architecture diagrams
-│   │   └── Contact.tsx             ← /contact — Contact form (Formspree)
+│   │   └── About.tsx               ← /about — Bio, photo, career impact
 │   ├── App.tsx                     ← Router configuration + Layout wrapper
 │   ├── index.css                   ← Global styles + CSS custom properties
 │   └── main.tsx                    ← React 19 entry point
@@ -53,5 +54,5 @@ portfolio/
 - **Pages** — one file per route, flat in `src/pages/`
 - **Components** — shared UI in `src/components/`, currently only `Nav.tsx`
 - **No `src/hooks/` or `src/utils/` yet** — add as needed, don't pre-create
-- **No backend** — 100% static. Contact form POSTs to Formspree
+- **No backend** — 100% static. Contact is link-only (mailto / LinkedIn / cal.com); no form
 - **Tests** — Playwright only (E2E); no unit test framework yet

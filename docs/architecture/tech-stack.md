@@ -26,10 +26,11 @@
 
 | Tool | Purpose |
 |------|---------|
-| Vite build | Bundles to `dist/` (~354 KB JS, ~8 KB CSS) |
-| GitHub Actions | CI on push to `main` |
-| `peaceiris/actions-gh-pages@v3` | Deploys `dist/` to `gh-pages` branch |
-| GitHub Pages | Static hosting |
+| Vite build | Bundles to `dist/` (~381 KB JS, ~10 KB CSS) |
+| GitHub Actions | CI on push to `main` (`deploy.yml`) |
+| `actions/upload-pages-artifact@v3` + `actions/deploy-pages@v4` | Official GitHub Pages deploy (no `gh-pages` branch) |
+| GitHub Pages | Static hosting (Source = "GitHub Actions") |
+| Umami | Self-hosted analytics + session replay (`insights.westfieldnexus.com`) |
 | Cloudflare | DNS + SSL proxy (`portfolio.westfieldnexus.com` CNAME) |
 
 ## Linting
@@ -40,7 +41,7 @@
 
 ## Key Design Decisions
 
-- **Static-only**: No server. Contact form uses Formspree (external service).
+- **Static-only**: No server, no form backend. Contact is link-only (mailto / LinkedIn / cal.com).
 - **Custom domain**: `base: '/'` in Vite config. CNAME written at CI build time.
 - **CSS variables over Tailwind utilities for theming**: All design tokens in `src/index.css` `:root` block. Tailwind used for layout utilities.
 - **D3 pattern**: `useRef<SVGSVGElement>(null)` + null guard + full redraw in `useEffect`.

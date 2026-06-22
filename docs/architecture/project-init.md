@@ -22,8 +22,7 @@
 
 ### Known Issues
 
-- Formspree endpoint in `src/pages/Contact.tsx:3` is a placeholder (`https://formspree.io/f/placeholder`). Contact form will fail silently until replaced.
-- No commits yet — Anchor Commit field will be populated after first `git commit`.
+- None outstanding. (The former Formspree/contact-form placeholder was removed — contact is now link-only via mailto / LinkedIn / cal.com.)
 
 ## Generated Files
 
@@ -58,6 +57,6 @@
 ## Notes
 
 - This is a personal portfolio project, not a team project. SDLC formality should be lightweight.
-- No server-side code — all external integrations go through Formspree or static links.
+- No server-side code — all external integrations are static links (mailto / LinkedIn / cal.com) plus the Umami analytics scripts.
 - The `main` branch auto-deploys via GitHub Actions. Treat every push to `main` as a production deploy.
 - Run `/quorum update-docs --check` after first commit to anchor the baseline.

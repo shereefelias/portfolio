@@ -1,11 +1,11 @@
 {
   "name": "Shereef Elias",
   "short_name": "SE",
-  "description": "Software engineer — data viz, systems design, full-stack.",
+  "description": "Shereef Elias — Director of Engineering. 20+ years building and scaling global engineering organizations in financial services.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
-  "theme_color": "#0f0f0f",
+  "background_color": "#0d1b2a",
+  "theme_color": "#0d1b2a",
   "icons": [
     {
       "src": "/apple-touch-icon.png",
