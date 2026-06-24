@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import heroPaperCut from '../assets/hero-paper-cut.png'
-import logo from '../assets/logo.png'
 
 const impactAreas = [
   {
@@ -15,8 +14,8 @@ const impactAreas = [
   },
   {
     icon: <ShieldIcon />,
-    title: 'Risk & Ratings',
-    body: 'Building software for credit, ratings, regulatory workflows, and financial controls where precision matters.',
+    title: 'Ratings & Capital Markets',
+    body: 'Building software across credit ratings and ratings workflows, capital markets, commercial and wholesale banking, and AML/KYC compliance.',
   },
   {
     icon: <CloudIcon />,
@@ -27,8 +26,8 @@ const impactAreas = [
 
 const platformStats = [
   ['30+', 'Engineers led'],
-  ['1,000+', 'Analysts supported'],
-  ['AWS', 'Cloud native platforms'],
+  ['Global', 'Delivery teams'],
+  ['Multi-cloud', 'AWS · Azure · GCP'],
   ['AI', 'Enabled engineering'],
 ]
 
@@ -103,7 +102,7 @@ export default function Home() {
       <section className="home-section home-section--team">
         <div className="section-heading">
           <span />
-          <h2>The Team Behind the Platforms</h2>
+          <h2>Teams I Build &amp; Lead</h2>
           <span />
         </div>
         <div className="team-grid">

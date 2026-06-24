@@ -1,16 +1,18 @@
 import { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 
-// Navy-theme palette for SVG (D3 can't read CSS variables directly).
+// Brand palette (dark teal + gold) for SVG — D3 can't read CSS variables directly.
 const C = {
-  accent: '#00d9ff',
-  accentSoft: 'rgba(0,217,255,0.16)',
-  text: '#94a3b8',
-  textH: '#e2e8f0',
-  grid: '#1e3a5f',
-  track: '#1a3a5c',
-  muted: '#475569',
-  node: '#112240',
+  accent: '#d4ad5e', // gold — primary marks
+  accentSoft: 'rgba(208,169,85,0.20)',
+  text: '#b9ac90', // muted sand text on teal
+  textH: '#f4f0e7', // cream headings / labels
+  grid: 'rgba(244,240,231,0.12)', // faint gridlines on teal
+  track: '#0a474a', // teal secondary band
+  muted: '#8fa49c', // muted teal-gray
+  node: '#063b40', // teal box / node fill
+  panel: '#04262b', // darker teal canvas
+  skill: '#56b6a8', // teal-green — secondary marks (skills)
 }
 
 const SVGNS = 'http://www.w3.org/2000/svg'
@@ -21,7 +23,6 @@ const REDUCE_MOTION =
     : false
 
 // ByteByteGo-style flow dot: a circle that rides a path via <animateMotion>.
-// Built with createElementNS so the SMIL elements land in the SVG namespace.
 function flowDot(
   parent: SVGGElement,
   pathId: string,
@@ -64,6 +65,27 @@ function addArrowMarker(
     .attr('fill', color)
 }
 
+// Two-line word wrap for an SVG <text> centered on its current x.
+function wrapLabel(textEl: SVGTextElement, str: string, maxChars: number) {
+  const t = d3.select(textEl)
+  const x = t.attr('x')
+  const words = str.split(' ')
+  let line: string[] = []
+  t.text(null)
+  let tspan = t.append('tspan').attr('x', x).attr('dy', '0em')
+  words.forEach((word) => {
+    line.push(word)
+    if (line.join(' ').length > maxChars && line.length > 1) {
+      line.pop()
+      tspan.text(line.join(' '))
+      line = [word]
+      tspan = t.append('tspan').attr('x', x).attr('dy', '1.15em').text(word)
+    } else {
+      tspan.text(line.join(' '))
+    }
+  })
+}
+
 type Draw = (svg: SVGSVGElement, width: number) => void
 
 // Shared responsive D3 mount: redraws on container resize.
@@ -97,366 +119,488 @@ function VizCard({ title, subtitle, children }: { title: string; subtitle: strin
     <section
       className="viz-card"
       style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
+        background: 'linear-gradient(160deg, #073b40, #052b31)',
+        border: '1px solid var(--accent-border)',
         borderRadius: 12,
         padding: '1.75rem',
         marginBottom: '1.75rem',
       }}
     >
-      <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-h)', margin: '0 0 0.25rem' }}>{title}</h2>
-      <p style={{ fontSize: '0.825rem', color: 'var(--text)', margin: '0 0 1.5rem' }}>{subtitle}</p>
+      <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#f4f0e7', margin: '0 0 0.25rem' }}>{title}</h2>
+      <p style={{ fontSize: '0.825rem', color: '#b9ac90', margin: '0 0 1.5rem' }}>{subtitle}</p>
       {children}
     </section>
   )
 }
 
 /* ------------------------------------------------------------------ */
-/* 1. Quantified impact — before → after with a flowing dot           */
+/* 1. Cost-savings waterfall — where the $1M+/yr comes from            */
 /* ------------------------------------------------------------------ */
 
-const TIME_UNITS = ['Months', 'Weeks', 'Days', 'Hours']
-
-interface ImpactItem {
+interface WfStep {
   label: string
-  from: string
-  to: string
+  value: number
+  kind: 'inc' | 'total'
 }
 
-const impactItems: ImpactItem[] = [
-  { label: 'Legacy system analysis', from: 'Days', to: 'Hours' },
-  { label: 'Portal release cycle', from: 'Weeks', to: 'Days' },
-  { label: 'Delivery timeline', from: 'Months', to: 'Weeks' },
+// Total ($1M+/yr) is real; the contribution split is approximate — edit freely.
+const savings: WfStep[] = [
+  { label: 'Vendor & license consolidation', value: 0.45, kind: 'inc' },
+  { label: 'Cloud right-sizing & FinOps', value: 0.35, kind: 'inc' },
+  { label: 'Automation & toil reduction', value: 0.25, kind: 'inc' },
+  { label: 'Annual run-rate', value: 1.05, kind: 'total' },
 ]
 
-const drawImpact: Draw = (svg, width) => {
+const drawWaterfall: Draw = (svg, width) => {
   const sel = d3.select(svg)
   sel.selectAll('*').remove()
-  const margin = { top: 22, right: 64, bottom: 36, left: 168 }
+  const margin = { top: 28, right: 16, bottom: 56, left: 48 }
   const w = Math.max(width, 320)
   const innerW = w - margin.left - margin.right
-  const rowH = 50
-  const innerH = impactItems.length * rowH
+  const innerH = 220
   const height = innerH + margin.top + margin.bottom
   sel.attr('width', w).attr('height', height)
   const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
-  const x = d3.scalePoint<string>().domain(TIME_UNITS).range([0, innerW]).padding(0.5)
-  const y = d3.scaleBand<string>().domain(impactItems.map((d) => d.label)).range([0, innerH]).padding(0.45)
-  const X = (u: string) => x(u) ?? 0
+  const y = d3.scaleLinear().domain([0, 1.15]).range([innerH, 0])
+  const x = d3.scaleBand<string>().domain(savings.map((s) => s.label)).range([0, innerW]).padding(0.42)
 
-  g.selectAll('.tu').data(TIME_UNITS).enter().append('line')
-    .attr('x1', (d) => X(d)).attr('x2', (d) => X(d)).attr('y1', 0).attr('y2', innerH)
+  const yTicks = [0, 0.25, 0.5, 0.75, 1.0]
+  g.selectAll('.gl').data(yTicks).enter().append('line')
+    .attr('x1', 0).attr('x2', innerW).attr('y1', (d) => y(d)).attr('y2', (d) => y(d))
     .attr('stroke', C.grid).attr('stroke-dasharray', '3,3')
+  g.selectAll('.gll').data(yTicks).enter().append('text')
+    .attr('x', -8).attr('y', (d) => y(d)).attr('dy', '0.32em').attr('text-anchor', 'end')
+    .attr('fill', C.muted).attr('font-size', '9px').text((d) => `$${d.toFixed(2)}M`)
 
-  g.selectAll('.tul').data(TIME_UNITS).enter().append('text')
-    .attr('x', (d) => X(d)).attr('y', innerH + 22).attr('text-anchor', 'middle')
-    .attr('fill', C.text).attr('font-size', '11px').text((d) => d)
-
-  g.append('text').attr('x', innerW).attr('y', innerH + 22).attr('dx', 10)
-    .attr('fill', C.muted).attr('font-size', '10px').text('faster →')
-
-  const rows = g.selectAll('.row').data(impactItems).enter().append('g')
-    .attr('transform', (d) => `translate(0,${(y(d.label) ?? 0) + y.bandwidth() / 2})`)
-
-  rows.each(function (this: SVGGElement, d, i) {
-    const row = d3.select(this)
-    const id = `impact-edge-${i}`
-    row.append('path').attr('id', id).attr('fill', 'none')
-      .attr('d', `M${X(d.from)},0 L${X(d.to)},0`)
-      .attr('stroke', C.accent).attr('stroke-width', 2.5).attr('stroke-dasharray', '2 5').attr('opacity', 0.7)
-    flowDot(this, id, { dur: '1.7s', begin: `${i * 0.3}s`, r: 4 })
+  let cum = 0
+  const bars = savings.map((s) => {
+    if (s.kind === 'total') return { ...s, y0: 0, y1: s.value }
+    const y0 = cum
+    cum += s.value
+    return { ...s, y0, y1: cum }
   })
 
-  rows.append('circle').attr('cx', (d) => X(d.from)).attr('cy', 0).attr('r', 5)
-    .attr('fill', C.track).attr('stroke', C.muted).attr('stroke-width', 2)
-  rows.append('circle').attr('cx', (d) => X(d.to)).attr('cy', 0).attr('r', 6).attr('fill', C.accent)
+  const grp = g.selectAll('.bar').data(bars).enter().append('g')
+  grp.append('rect')
+    .attr('x', (d) => x(d.label) ?? 0).attr('width', x.bandwidth())
+    .attr('y', innerH).attr('height', 0).attr('rx', 4)
+    .attr('fill', (d) => (d.kind === 'total' ? C.accent : C.accentSoft))
+    .attr('stroke', C.accent).attr('stroke-width', (d) => (d.kind === 'total' ? 0 : 1.2))
+    .transition().duration(700).delay((_, i) => i * 140)
+    .attr('y', (d) => y(d.y1)).attr('height', (d) => y(d.y0) - y(d.y1))
 
-  rows.append('text').attr('x', -14).attr('y', 0).attr('dy', '0.32em').attr('text-anchor', 'end')
-    .attr('fill', C.textH).attr('font-size', '12.5px').attr('font-weight', 600).text((d) => d.label)
-  rows.append('text').attr('x', (d) => X(d.from)).attr('y', -13).attr('text-anchor', 'middle')
-    .attr('fill', C.text).attr('font-size', '10.5px').text((d) => d.from)
-  rows.append('text').attr('x', (d) => X(d.to)).attr('y', -13).attr('text-anchor', 'middle')
-    .attr('fill', C.accent).attr('font-size', '10.5px').attr('font-weight', 600).text((d) => d.to)
-}
+  grp.append('text')
+    .attr('x', (d) => (x(d.label) ?? 0) + x.bandwidth() / 2).attr('y', (d) => y(d.y1) - 7)
+    .attr('text-anchor', 'middle').attr('fill', (d) => (d.kind === 'total' ? C.textH : C.accent))
+    .attr('font-size', '11px').attr('font-weight', 700)
+    .attr('opacity', 0)
+    .text((d) => (d.kind === 'total' ? `$${d.value.toFixed(2)}M+` : `+$${d.value.toFixed(2)}M`))
+    .transition().duration(400).delay((_, i) => 500 + i * 140).attr('opacity', 1)
 
-/* ------------------------------------------------------------------ */
-/* 2. Career trajectory timeline — with a tracer dot                  */
-/* ------------------------------------------------------------------ */
-
-interface Tenure {
-  company: string
-  start: number
-  end: number
-  fill: string
-}
-
-interface Milestone {
-  year: number
-  label: string
-  side: 'above' | 'below'
-}
-
-const NOW_YEAR = 2026
-const tenures: Tenure[] = [
-  { company: 'Citigroup', start: 2006, end: 2014, fill: C.track },
-  { company: 'Fitch Ratings', start: 2014, end: NOW_YEAR, fill: C.accentSoft },
-]
-const milestones: Milestone[] = [
-  { year: 2006, label: 'Engineer', side: 'below' },
-  { year: 2014, label: 'VP · 5 promotions', side: 'above' },
-  { year: 2014, label: 'Lead Developer', side: 'below' },
-  { year: 2017, label: 'Associate Director', side: 'above' },
-  { year: 2021, label: 'Director', side: 'below' },
-  { year: NOW_YEAR, label: 'Present', side: 'above' },
-]
-
-const drawCareer: Draw = (svg, width) => {
-  const sel = d3.select(svg)
-  sel.selectAll('*').remove()
-  const margin = { top: 48, right: 28, bottom: 30, left: 28 }
-  const w = Math.max(width, 320)
-  const innerW = w - margin.left - margin.right
-  const innerH = 120
-  const height = innerH + margin.top + margin.bottom
-  sel.attr('width', w).attr('height', height)
-  const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
-
-  const x = d3.scaleLinear().domain([2006, NOW_YEAR]).range([0, innerW])
-  const midY = innerH / 2
-
-  g.selectAll('.band').data(tenures).enter().append('rect')
-    .attr('x', (d) => x(d.start)).attr('y', midY - 11)
-    .attr('width', (d) => x(d.end) - x(d.start)).attr('height', 22).attr('rx', 6)
-    .attr('fill', (d) => d.fill).attr('stroke', C.grid)
-
-  g.selectAll('.bandlabel').data(tenures).enter().append('text')
-    .attr('x', (d) => (x(d.start) + x(d.end)) / 2).attr('y', midY).attr('dy', '0.32em')
-    .attr('text-anchor', 'middle').attr('fill', C.textH).attr('font-size', '11px').attr('font-weight', 600)
-    .text((d) => d.company)
-
-  // invisible track for the tracer dot (left → right = progression through time)
-  g.append('path').attr('id', 'career-track').attr('fill', 'none').attr('stroke', 'none')
-    .attr('d', `M0,${midY} L${innerW},${midY}`)
-  flowDot(g.node() as SVGGElement, 'career-track', { dur: '3.4s', r: 4.5 })
-
-  const ticks = [2006, 2010, 2014, 2018, 2022, NOW_YEAR]
-  g.selectAll('.tick').data(ticks).enter().append('text')
-    .attr('x', (d) => x(d)).attr('y', innerH + 6).attr('text-anchor', 'middle')
-    .attr('fill', C.muted).attr('font-size', '10px').text((d) => String(d))
-
-  const m = g.selectAll('.ms').data(milestones).enter().append('g')
-    .attr('transform', (d) => `translate(${x(d.year)},${midY})`)
-  m.append('circle').attr('r', 0).attr('fill', C.accent).attr('stroke', 'var(--surface)').attr('stroke-width', 2)
-    .transition().duration(500).delay((_, i) => i * 90).attr('r', 4.5)
-  m.append('line').attr('x1', 0).attr('x2', 0)
-    .attr('y1', (d) => (d.side === 'above' ? -11 : 11)).attr('y2', (d) => (d.side === 'above' ? -22 : 22))
-    .attr('stroke', C.muted)
-  m.append('text').attr('x', 0).attr('y', (d) => (d.side === 'above' ? -27 : 33))
-    .attr('text-anchor', 'middle').attr('fill', C.textH).attr('font-size', '11px').attr('font-weight', 600)
-    .text((d) => d.label)
-}
-
-/* ------------------------------------------------------------------ */
-/* 3. Tech radar — Adopt / Trial / Assess                             */
-/* ------------------------------------------------------------------ */
-
-const RADAR_QUADRANTS = ['Platforms & Cloud', 'Data & Streaming', 'Languages & APIs', 'AI & DevOps']
-const RADAR_RINGS = ['Adopt', 'Trial', 'Assess']
-
-interface Blip {
-  q: number
-  ring: number
-  name: string
-}
-
-const radarBlips: Blip[] = [
-  { q: 0, ring: 0, name: 'AWS EKS' },
-  { q: 0, ring: 0, name: 'Kubernetes' },
-  { q: 0, ring: 0, name: 'AWS Lambda' },
-  { q: 0, ring: 1, name: 'Aurora RDS' },
-  { q: 0, ring: 2, name: 'Azure' },
-  { q: 1, ring: 0, name: 'Kafka / MSK' },
-  { q: 1, ring: 0, name: 'Snowflake' },
-  { q: 1, ring: 1, name: 'Trino / Starburst' },
-  { q: 1, ring: 1, name: 'Neo4j' },
-  { q: 1, ring: 2, name: 'DynamoDB' },
-  { q: 2, ring: 0, name: 'Python' },
-  { q: 2, ring: 0, name: 'Java' },
-  { q: 2, ring: 1, name: 'FastAPI' },
-  { q: 2, ring: 1, name: 'GraphQL' },
-  { q: 2, ring: 2, name: 'Node.js' },
-  { q: 3, ring: 0, name: 'Argo CD / GitOps' },
-  { q: 3, ring: 0, name: 'GitHub Actions' },
-  { q: 3, ring: 1, name: 'Claude Code' },
-  { q: 3, ring: 1, name: 'Datadog / OTel' },
-  { q: 3, ring: 2, name: 'Amazon Q / Gemini' },
-]
-
-const drawRadar: Draw = (svg, width) => {
-  const sel = d3.select(svg)
-  sel.selectAll('*').remove()
-  const w = Math.max(width, 320)
-  const size = Math.min(w, 460)
-  sel.attr('width', w).attr('height', size)
-  const cx = w / 2
-  const cy = size / 2
-  const R = size / 2 - 30
-  const ringEdges = [0, R * 0.46, R * 0.74, R]
-  const g = sel.append('g').attr('transform', `translate(${cx},${cy})`)
-
-  g.selectAll('.ring').data([1, 2, 3]).enter().append('circle')
-    .attr('r', (d) => ringEdges[d]).attr('fill', 'none').attr('stroke', C.grid)
-
-  g.append('line').attr('x1', -R).attr('x2', R).attr('y1', 0).attr('y2', 0).attr('stroke', C.grid)
-  g.append('line').attr('x1', 0).attr('x2', 0).attr('y1', -R).attr('y2', R).attr('stroke', C.grid)
-
-  g.selectAll('.rl').data(RADAR_RINGS).enter().append('text')
-    .attr('x', 4).attr('y', (_, i) => -(ringEdges[i] + ringEdges[i + 1]) / 2).attr('dy', '0.32em')
-    .attr('fill', C.muted).attr('font-size', '9px').text((d) => d)
-
-  const corners: [number, number, string][] = [
-    [R, -R + 4, 'start'], [R, R, 'start'], [-R, R, 'end'], [-R, -R + 4, 'end'],
-  ]
-  g.selectAll('.ql').data(RADAR_QUADRANTS).enter().append('text')
-    .attr('x', (_, i) => corners[i][0]).attr('y', (_, i) => corners[i][1])
-    .attr('text-anchor', (_, i) => corners[i][2]).attr('fill', C.text)
-    .attr('font-size', '10.5px').attr('font-weight', 600).text((d) => d)
-
-  const counts: Record<string, number> = {}
-  const totals: Record<string, number> = {}
-  radarBlips.forEach((b) => { const k = `${b.q}-${b.ring}`; totals[k] = (totals[k] ?? 0) + 1 })
-
-  const positioned = radarBlips.map((b, i) => {
-    const k = `${b.q}-${b.ring}`
-    counts[k] = (counts[k] ?? 0) + 1
-    const m = totals[k]
-    const idx = counts[k]
-    const qStart = b.q * (Math.PI / 2)
-    const angle = qStart + (idx / (m + 1)) * (Math.PI / 2)
-    const rMid = (ringEdges[b.ring] + ringEdges[b.ring + 1]) / 2
-    const jitter = ((idx % 2) * 2 - 1) * R * 0.05
-    const r = rMid + jitter
-    return { n: i + 1, x: Math.cos(angle) * r, y: Math.sin(angle) * r }
-  })
-
-  const blip = g.selectAll('.blip').data(positioned).enter().append('g')
-    .attr('transform', (d) => `translate(${d.x},${d.y})`)
-  blip.append('circle').attr('r', 0).attr('fill', C.accent).attr('opacity', 0.9)
-    .transition().duration(450).delay((_, i) => i * 25).attr('r', 9)
-  blip.append('text').attr('text-anchor', 'middle').attr('dy', '0.32em')
-    .attr('fill', '#0d1b2a').attr('font-size', '9px').attr('font-weight', 700).text((d) => d.n)
-}
-
-/* ------------------------------------------------------------------ */
-/* 4. AI marketplace adoption curve — with a flowing dot              */
-/* ------------------------------------------------------------------ */
-
-// Endpoints are real (14 agents, 93 skills, org-wide); the ramp is illustrative.
-const adoptionPts: [number, number][] = [
-  [2023, 0], [2023.6, 8], [2024.2, 26], [2024.8, 52], [2025.4, 78], [2026, 100],
-]
-const adoptionPhases: [number, string][] = [
-  [2023.1, 'First agents'],
-  [2024.3, 'AI-SDLC standard'],
-  [2025.6, 'Org-wide'],
-]
-
-const drawAdoption: Draw = (svg, width) => {
-  const sel = d3.select(svg)
-  sel.selectAll('*').remove()
-  const margin = { top: 26, right: 30, bottom: 30, left: 18 }
-  const w = Math.max(width, 320)
-  const innerW = w - margin.left - margin.right
-  const innerH = 180
-  const height = innerH + margin.top + margin.bottom
-  sel.attr('width', w).attr('height', height)
-  const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
-
-  const x = d3.scaleLinear().domain([2023, 2026]).range([0, innerW])
-  const y = d3.scaleLinear().domain([0, 100]).range([innerH, 0])
-
-  g.append('line').attr('x1', 0).attr('x2', innerW).attr('y1', innerH).attr('y2', innerH).attr('stroke', C.grid)
-
-  const area = d3.area<[number, number]>().x((d) => x(d[0])).y0(innerH).y1((d) => y(d[1])).curve(d3.curveBasis)
-  const line = d3.line<[number, number]>().x((d) => x(d[0])).y((d) => y(d[1])).curve(d3.curveBasis)
-
-  g.append('path').datum(adoptionPts).attr('fill', C.accentSoft).attr('d', area)
-  const path = g.append('path').datum(adoptionPts).attr('id', 'adoption-line').attr('fill', 'none')
-    .attr('stroke', C.accent).attr('stroke-width', 2.5).attr('d', line)
-
-  const len = (path.node() as SVGPathElement).getTotalLength()
-  path.attr('stroke-dasharray', `${len} ${len}`).attr('stroke-dashoffset', len)
-    .transition().duration(1100).attr('stroke-dashoffset', 0)
-    .on('end', () => flowDot(g.node() as SVGGElement, 'adoption-line', { dur: '2.4s', r: 4.5 }))
-
-  adoptionPhases.forEach(([yr, label]) => {
-    g.append('line').attr('x1', x(yr)).attr('x2', x(yr)).attr('y1', innerH).attr('y2', innerH + 6).attr('stroke', C.muted)
-    g.append('text').attr('x', x(yr)).attr('y', innerH + 18).attr('text-anchor', 'middle')
-      .attr('fill', C.muted).attr('font-size', '10px').text(label)
-  })
-
-  ;[2023, 2024, 2025, 2026].forEach((yr) => {
-    g.append('text').attr('x', x(yr)).attr('y', -10).attr('text-anchor', 'middle')
-      .attr('fill', C.grid).attr('font-size', '9px').text(String(yr))
-  })
-
-  const last = adoptionPts[adoptionPts.length - 1]
-  g.append('circle').attr('cx', x(last[0])).attr('cy', y(last[1])).attr('r', 5).attr('fill', C.accent)
-  g.append('text').attr('x', x(last[0])).attr('y', y(last[1]) - 12).attr('text-anchor', 'end')
-    .attr('fill', C.textH).attr('font-size', '12px').attr('font-weight', 700).text('14 agents · 93 skills')
-}
-
-/* ------------------------------------------------------------------ */
-/* 5. AI-assisted SDLC flow — ByteByteGo-style nodes + moving dots     */
-/* ------------------------------------------------------------------ */
-
-const flowNodes: { title: string; sub: string }[] = [
-  { title: 'Codebase', sub: 'Legacy + greenfield' },
-  { title: '14 AI Agents', sub: 'Marketplace · 93 skills' },
-  { title: 'Generate', sub: 'Code · docs · tests' },
-  { title: 'Governance Review', sub: 'AI-SDLC guardrails' },
-  { title: 'Ship to Production', sub: 'Argo CD · GitOps' },
-]
-
-const drawFlow: Draw = (svg, width) => {
-  const sel = d3.select(svg)
-  sel.selectAll('*').remove()
-  const margin = { top: 10, right: 20, bottom: 10, left: 20 }
-  const w = Math.max(width, 320)
-  const innerW = w - margin.left - margin.right
-  const nodeW = Math.min(innerW, 340)
-  const nodeH = 52
-  const gap = 30
-  const n = flowNodes.length
-  const height = margin.top + margin.bottom + n * nodeH + (n - 1) * gap
-  sel.attr('width', w).attr('height', height)
-  addArrowMarker(sel, 'arrow-flow', C.accent)
-  const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
-
-  const cx = innerW / 2
-  const xLeft = cx - nodeW / 2
-  const yOf = (i: number) => i * (nodeH + gap)
-
-  for (let i = 0; i < n - 1; i++) {
-    const id = `flow-edge-${i}`
-    g.append('path').attr('id', id).attr('fill', 'none')
-      .attr('d', `M${cx},${yOf(i) + nodeH} L${cx},${yOf(i + 1)}`)
-      .attr('stroke', C.accent).attr('stroke-width', 2.5).attr('stroke-dasharray', '2 5')
-      .attr('marker-end', 'url(#arrow-flow)').attr('opacity', 0.75)
-    flowDot(g.node() as SVGGElement, id, { dur: '1.6s', begin: `${i * 0.25}s`, r: 4 })
+  for (let i = 0; i < bars.length - 1; i++) {
+    if (bars[i + 1].kind === 'total') continue
+    const xc = x(bars[i].label) ?? 0
+    g.append('line')
+      .attr('x1', xc + x.bandwidth()).attr('x2', x(bars[i + 1].label) ?? 0)
+      .attr('y1', y(bars[i].y1)).attr('y2', y(bars[i].y1))
+      .attr('stroke', C.muted).attr('stroke-dasharray', '2,3')
   }
 
-  flowNodes.forEach((node, i) => {
-    const ny = yOf(i)
-    const grp = g.append('g')
-    grp.append('rect').attr('x', xLeft).attr('y', ny).attr('width', nodeW).attr('height', nodeH).attr('rx', 10)
-      .attr('fill', C.node).attr('stroke', C.accent).attr('stroke-width', 1.5)
-    grp.append('text').attr('x', cx).attr('y', ny + nodeH / 2 - 4).attr('text-anchor', 'middle')
-      .attr('fill', C.textH).attr('font-size', '13px').attr('font-weight', 700).text(node.title)
-    grp.append('text').attr('x', cx).attr('y', ny + nodeH / 2 + 13).attr('text-anchor', 'middle')
-      .attr('fill', C.text).attr('font-size', '10.5px').text(node.sub)
+  grp.append('text')
+    .attr('x', (d) => (x(d.label) ?? 0) + x.bandwidth() / 2).attr('y', innerH + 16)
+    .attr('text-anchor', 'middle').attr('fill', C.text).attr('font-size', '9.5px')
+    .each(function (this: SVGTextElement, d) { wrapLabel(this, d.label, Math.max(12, Math.floor(x.bandwidth() / 5))) })
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Follow-the-sun global coverage                                  */
+/* ------------------------------------------------------------------ */
+
+interface Hub {
+  city: string
+  tz: string
+  startUTC: number
+  endUTC: number
+}
+
+// Local 09:00–17:00 mapped to UTC.
+const hubs: Hub[] = [
+  { city: 'Bengaluru, India', tz: 'IST · UTC+5:30', startUTC: 3.5, endUTC: 11.5 },
+  { city: 'Manchester, UK', tz: 'GMT · UTC+0', startUTC: 9, endUTC: 17 },
+  { city: 'London, UK', tz: 'GMT · UTC+0', startUTC: 9, endUTC: 17 },
+  { city: 'Toronto, Canada', tz: 'ET · UTC−5', startUTC: 14, endUTC: 22 },
+  { city: 'New York, US', tz: 'ET · UTC−5', startUTC: 14, endUTC: 22 },
+  { city: 'Chicago, US', tz: 'CT · UTC−6', startUTC: 15, endUTC: 23 },
+]
+
+const drawFollowSun: Draw = (svg, width) => {
+  const sel = d3.select(svg)
+  sel.selectAll('*').remove()
+  const margin = { top: 30, right: 30, bottom: 24, left: 120 }
+  const w = Math.max(width, 320)
+  const innerW = w - margin.left - margin.right
+  const rowH = 30
+  const innerH = (hubs.length + 1) * rowH
+  const height = innerH + margin.top + margin.bottom
+  sel.attr('width', w).attr('height', height)
+  const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+
+  const x = d3.scaleLinear().domain([0, 24]).range([0, innerW])
+  const hourTicks = [0, 3, 6, 9, 12, 15, 18, 21, 24]
+  g.selectAll('.h').data(hourTicks).enter().append('line')
+    .attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', -6).attr('y2', innerH)
+    .attr('stroke', C.grid).attr('stroke-dasharray', '2,3')
+  g.selectAll('.ht').data(hourTicks).enter().append('text')
+    .attr('x', (d) => x(d)).attr('y', -12).attr('text-anchor', 'middle')
+    .attr('fill', C.muted).attr('font-size', '9px').text((d) => (d === 24 ? '24' : String(d)))
+  g.append('text').attr('x', -margin.left + 2).attr('y', -12).attr('fill', C.muted).attr('font-size', '9px').text('UTC →')
+
+  hubs.forEach((h, i) => {
+    const ry = i * rowH
+    g.append('text').attr('x', -12).attr('y', ry + rowH / 2 - 3).attr('text-anchor', 'end')
+      .attr('fill', C.textH).attr('font-size', '11px').attr('font-weight', 600).text(h.city)
+    g.append('text').attr('x', -12).attr('y', ry + rowH / 2 + 9).attr('text-anchor', 'end')
+      .attr('fill', C.muted).attr('font-size', '8px').text(h.tz)
+    g.append('rect')
+      .attr('x', x(h.startUTC)).attr('y', ry + 7).attr('width', 0).attr('height', rowH - 14).attr('rx', 4)
+      .attr('fill', C.accentSoft).attr('stroke', C.accent).attr('stroke-width', 1)
+      .transition().duration(600).delay(i * 90).attr('width', x(h.endUTC) - x(h.startUTC))
   })
+
+  const cy = hubs.length * rowH
+  const covStart = Math.min(...hubs.map((h) => h.startUTC))
+  const covEnd = Math.max(...hubs.map((h) => h.endUTC))
+  g.append('text').attr('x', -12).attr('y', cy + rowH / 2).attr('dy', '0.32em').attr('text-anchor', 'end')
+    .attr('fill', C.accent).attr('font-size', '11px').attr('font-weight', 700).text('Coverage')
+  g.append('rect').attr('x', x(covStart)).attr('y', cy + 6).attr('width', x(covEnd) - x(covStart)).attr('height', rowH - 12).attr('rx', 4)
+    .attr('fill', 'rgba(208,169,85,0.34)').attr('stroke', C.accent).attr('stroke-width', 1)
+  g.append('path').attr('id', 'sun-track').attr('fill', 'none').attr('stroke', 'none')
+    .attr('d', `M${x(covStart)},${cy + rowH / 2} L${x(covEnd)},${cy + rowH / 2}`)
+  flowDot(g.node() as SVGGElement, 'sun-track', { dur: '4s', r: 5 })
+  g.append('text').attr('x', x(covEnd)).attr('y', cy + rowH / 2).attr('dx', 8).attr('dy', '0.32em')
+    .attr('fill', C.muted).attr('font-size', '9px').text(`~${Math.round(covEnd - covStart)}h / day`)
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. AI-assisted SDLC — continuous CI/CD loop                        */
+/* ------------------------------------------------------------------ */
+
+const sdlcStages: { stage: string; tag: string }[] = [
+  { stage: 'Plan & Spec', tag: 'BA · Architect' },
+  { stage: 'Build', tag: 'Dev · Test-gen' },
+  { stage: 'Review', tag: 'Security · Quality' },
+  { stage: 'Ship', tag: 'GitOps · Argo CD' },
+  { stage: 'Operate', tag: 'Observability' },
+]
+
+const drawSdlc: Draw = (svg, width) => {
+  const sel = d3.select(svg)
+  sel.selectAll('*').remove()
+  const w = Math.max(width, 360)
+  const size = Math.min(w, 520)
+  const height = size
+  sel.attr('width', w).attr('height', height)
+  addArrowMarker(sel, 'arrow-loop', C.accent)
+  const cx = w / 2
+  const cy = height / 2
+  const R = size / 2 - 78
+  const n = sdlcStages.length
+  const ang = (i: number) => (i / n) * 2 * Math.PI - Math.PI / 2
+  const P = (a: number, rad = R): [number, number] => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)]
+  const g = sel.append('g')
+
+  // faint guide ring + invisible orbit path for the perpetual flow dot
+  g.append('circle').attr('cx', cx).attr('cy', cy).attr('r', R).attr('fill', 'none')
+    .attr('stroke', C.grid).attr('stroke-dasharray', '2,5')
+  g.append('path').attr('id', 'loop-orbit').attr('fill', 'none').attr('stroke', 'none')
+    .attr('d', `M ${cx + R},${cy} A ${R},${R} 0 1 1 ${cx - R},${cy} A ${R},${R} 0 1 1 ${cx + R},${cy}`)
+
+  // directional arcs between stages + a governance gate on each arc
+  const gap = 0.28
+  for (let i = 0; i < n; i++) {
+    const [x1, y1] = P(ang(i) + gap)
+    const [x2, y2] = P(ang(i + 1) - gap)
+    g.append('path').attr('fill', 'none')
+      .attr('d', `M ${x1},${y1} A ${R},${R} 0 0 1 ${x2},${y2}`)
+      .attr('stroke', C.accent).attr('stroke-width', 2).attr('stroke-dasharray', '2 5')
+      .attr('opacity', 0.7).attr('marker-end', 'url(#arrow-loop)')
+    const [gx, gy] = P((ang(i) + ang(i + 1)) / 2)
+    g.append('rect').attr('x', gx - 4.5).attr('y', gy - 4.5).attr('width', 9).attr('height', 9)
+      .attr('transform', `rotate(45 ${gx} ${gy})`).attr('fill', C.node).attr('stroke', C.accent)
+  }
+
+  flowDot(g.node() as SVGGElement, 'loop-orbit', { dur: '6s', r: 4.5 })
+
+  // stage nodes + labels around the ring
+  sdlcStages.forEach((s, i) => {
+    const a = ang(i)
+    const [x, y] = P(a)
+    g.append('circle').attr('cx', x).attr('cy', y).attr('r', 0)
+      .attr('fill', C.accent).attr('stroke', C.node).attr('stroke-width', 2)
+      .transition().duration(450).delay(i * 80).attr('r', 8)
+    const c = Math.cos(a)
+    const [lx, ly] = P(a, R + 16)
+    const anchor = c > 0.3 ? 'start' : c < -0.3 ? 'end' : 'middle'
+    const tg = g.append('text').attr('x', lx).attr('y', ly).attr('text-anchor', anchor)
+      .attr('fill', C.textH).attr('font-size', '11px').attr('font-weight', 700).attr('opacity', 0)
+    tg.append('tspan').attr('x', lx).text(s.stage)
+    tg.append('tspan').attr('x', lx).attr('dy', '1.15em').attr('fill', C.text)
+      .attr('font-size', '9px').attr('font-weight', 400).text(s.tag)
+    tg.transition().duration(400).delay(300 + i * 80).attr('opacity', 1)
+  })
+
+  // centre label
+  const ct = g.append('text').attr('x', cx).attr('y', cy).attr('text-anchor', 'middle').attr('fill', C.accent)
+  ct.append('tspan').attr('x', cx).attr('dy', '-0.15em').attr('font-size', '13px').attr('font-weight', 800).text('Continuous')
+  ct.append('tspan').attr('x', cx).attr('dy', '1.2em').attr('font-size', '13px').attr('font-weight', 800).text('Delivery')
+}
+
+/* ------------------------------------------------------------------ */
+/* AI portfolio — agent ↔ skill network (shows reuse / complexity)    */
+/* ------------------------------------------------------------------ */
+
+// Labeled hubs = specialized agents; the cloud = the shared skill library.
+const agentHubs = [
+  'Quorum SDLC', 'Python', 'Rust', 'Database', 'Frontend', 'Apple',
+  'Playwright', 'MCP', 'Security', 'Codemod', 'Excel/Office', 'Skill-builder',
+]
+const SKILL_COUNT = 46
+
+interface NetNode extends d3.SimulationNodeDatum {
+  id: string
+  type: 'agent' | 'skill'
+  label?: string
+  r: number
+  ang?: number
+  deg?: number
+}
+interface NetLink extends d3.SimulationLinkDatum<NetNode> {
+  source: string | NetNode
+  target: string | NetNode
+}
+
+const drawNetwork: Draw = (svg, width) => {
+  const sel = d3.select(svg)
+  sel.selectAll('*').remove()
+  const w = Math.max(width, 320)
+  const height = Math.min(Math.max(w * 0.82, 380), 540)
+  sel.attr('width', w).attr('height', height)
+  const cx = w / 2
+  const cy = height / 2
+  const R = Math.min(w, height) / 2 - 58 // agent-ring radius (leaves room for labels)
+
+  // Agents fixed evenly around the ring.
+  const nA = agentHubs.length
+  const agents: NetNode[] = agentHubs.map((nm, i) => {
+    const ang = (i / nA) * 2 * Math.PI - Math.PI / 2
+    const x = cx + R * Math.cos(ang)
+    const y = cy + R * Math.sin(ang)
+    return { id: `a${i}`, type: 'agent', label: nm, r: 9, ang, x, y, fx: x, fy: y }
+  })
+
+  // Skills start near the centre; the simulation pulls each toward the agents that use it.
+  const skills: NetNode[] = []
+  for (let i = 0; i < SKILL_COUNT; i++) {
+    const k = 2 + (i % 3) // each skill is shared by 2–4 agents → overlap
+    skills.push({
+      id: `s${i}`, type: 'skill', r: 3.2 + (k - 2) * 1.6, deg: k,
+      x: cx + (i % 7 - 3) * 6, y: cy + ((i % 5) - 2) * 6,
+    })
+  }
+  const nodes: NetNode[] = [...agents, ...skills]
+
+  // Each skill connects to k distinct agents spread around the ring.
+  const links: NetLink[] = []
+  for (let i = 0; i < SKILL_COUNT; i++) {
+    const k = 2 + (i % 3)
+    const start = i % nA
+    const step = 1 + (i % 3)
+    for (let j = 0; j < k; j++) links.push({ source: `s${i}`, target: `a${(start + j * step) % nA}` })
+  }
+
+  const sim = d3
+    .forceSimulation<NetNode>(nodes)
+    .force('link', d3.forceLink<NetNode, NetLink>(links).id((d) => d.id).distance(R * 0.55).strength(0.22))
+    .force('charge', d3.forceManyBody<NetNode>().strength(-16))
+    .force('collide', d3.forceCollide<NetNode>().radius((d) => d.r + 2))
+    .force('x', d3.forceX<NetNode>(cx).strength(0.03))
+    .force('y', d3.forceY<NetNode>(cy).strength(0.03))
+    .stop()
+  for (let i = 0; i < 420; i++) sim.tick()
+
+  // Keep skills inside the ring.
+  skills.forEach((n) => {
+    const dx = (n.x ?? cx) - cx
+    const dy = (n.y ?? cy) - cy
+    const dist = Math.hypot(dx, dy)
+    const max = R - 12
+    if (dist > max) {
+      n.x = cx + (dx / dist) * max
+      n.y = cy + (dy / dist) * max
+    }
+  })
+
+  const xy = (e: string | NetNode) => e as NetNode
+  const idOf = (e: string | NetNode) => (typeof e === 'string' ? e : e.id)
+
+  // adjacency for hover highlighting
+  const linkIdx = new Map<string, number[]>()
+  const neighbors = new Map<string, Set<string>>()
+  nodes.forEach((nd) => {
+    linkIdx.set(nd.id, [])
+    neighbors.set(nd.id, new Set<string>())
+  })
+  links.forEach((lk, i) => {
+    const s = idOf(lk.source)
+    const t = idOf(lk.target)
+    linkIdx.get(s)?.push(i)
+    linkIdx.get(t)?.push(i)
+    neighbors.get(s)?.add(t)
+    neighbors.get(t)?.add(s)
+  })
+
+  // dark teal canvas + gold frame
+  sel.append('rect').attr('x', 0).attr('y', 0).attr('width', w).attr('height', height)
+    .attr('rx', 12).attr('fill', C.panel).attr('stroke', 'rgba(208,169,85,0.30)')
+
+  // clip so zoomed / panned nodes stay inside the frame
+  const clipId = 'net-clip'
+  sel.append('clipPath').attr('id', clipId).append('rect')
+    .attr('x', 1).attr('y', 1).attr('width', w - 2).attr('height', height - 2).attr('rx', 12)
+
+  const zoomG = sel.append('g').attr('clip-path', `url(#${clipId})`)
+  const g = zoomG.append('g') // transformed by the zoom behaviour
+
+  const EDGE = { base: 'rgba(208,169,85,0.32)', dim: 'rgba(208,169,85,0.05)', width: 0.8 }
+
+  const linkSel = g.append('g').selectAll<SVGLineElement, NetLink>('line').data(links).enter().append('line')
+    .attr('x1', (d) => xy(d.source).x ?? 0).attr('y1', (d) => xy(d.source).y ?? 0)
+    .attr('x2', (d) => xy(d.target).x ?? 0).attr('y2', (d) => xy(d.target).y ?? 0)
+    .attr('stroke', EDGE.base).attr('stroke-width', EDGE.width).attr('opacity', 0)
+  linkSel.transition().duration(800).attr('opacity', 1)
+
+  const skillSel = g.append('g').selectAll<SVGCircleElement, NetNode>('circle').data(skills).enter().append('circle')
+    .attr('cx', (d) => d.x ?? 0).attr('cy', (d) => d.y ?? 0).attr('r', 0)
+    .attr('fill', C.skill).attr('opacity', 0.95).style('cursor', 'pointer')
+  skillSel.append('title').text((d) => `Skill · shared by ${d.deg} agents`)
+  skillSel.transition().duration(450).delay((_, i) => i * 8).attr('r', (d) => d.r)
+
+  const agSel = g.append('g').selectAll<SVGGElement, NetNode>('g').data(agents).enter().append('g').style('cursor', 'pointer')
+  const agCircle = agSel.append('circle').attr('cx', (d) => d.x ?? 0).attr('cy', (d) => d.y ?? 0).attr('r', 0)
+    .attr('fill', C.accent).attr('stroke', C.panel).attr('stroke-width', 2)
+  agCircle.append('title').text((d) => d.label ?? '')
+  agCircle.transition().duration(500).delay((_, i) => i * 30).attr('r', (d) => d.r)
+  const agLabel = agSel.append('text')
+    .attr('x', (d) => cx + (R + 16) * Math.cos(d.ang ?? 0))
+    .attr('y', (d) => cy + (R + 16) * Math.sin(d.ang ?? 0))
+    .attr('dy', '0.32em')
+    .attr('text-anchor', (d) => {
+      const c = Math.cos(d.ang ?? 0)
+      return c > 0.3 ? 'start' : c < -0.3 ? 'end' : 'middle'
+    })
+    .attr('fill', C.textH).attr('font-size', '10px').attr('font-weight', 700)
+    .attr('stroke', C.panel).attr('stroke-width', 3).attr('paint-order', 'stroke')
+    .attr('opacity', 0).text((d) => d.label ?? '')
+  agLabel.transition().duration(400).delay(600).attr('opacity', 1)
+
+  // hover: trace a node's connections
+  const isOn = (a: string, id: string, nbr: Set<string>) => a === id || nbr.has(a)
+  function highlight(id: string) {
+    const nbr = neighbors.get(id) ?? new Set<string>()
+    const active = new Set<number>(linkIdx.get(id) ?? [])
+    linkSel.attr('stroke', (_, i) => (active.has(i) ? C.accent : EDGE.dim))
+      .attr('stroke-width', (_, i) => (active.has(i) ? 1.8 : EDGE.width))
+    skillSel.attr('opacity', (d) => (isOn(d.id, id, nbr) ? 1 : 0.1))
+    agCircle.attr('opacity', (d) => (isOn(d.id, id, nbr) ? 1 : 0.18))
+    agLabel.attr('opacity', (d) => (isOn(d.id, id, nbr) ? 1 : 0.15))
+  }
+  function reset() {
+    linkSel.attr('stroke', EDGE.base).attr('stroke-width', EDGE.width)
+    skillSel.attr('opacity', 0.95)
+    agCircle.attr('opacity', 1)
+    agLabel.attr('opacity', 1)
+  }
+  agSel.on('mouseenter', (_e, d) => highlight(d.id)).on('mouseleave', reset)
+  skillSel.on('mouseenter', (_e, d) => highlight(d.id)).on('mouseleave', reset)
+
+  // zoom + pan
+  const zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.6, 4])
+    .on('zoom', (e) => g.attr('transform', e.transform.toString()))
+  sel.call(zoom)
+
+  // legend + hint (fixed, outside the zoom group)
+  const lg = sel.append('g').attr('transform', 'translate(14,14)')
+  lg.append('circle').attr('cx', 6).attr('cy', 6).attr('r', 6).attr('fill', C.accent)
+  lg.append('text').attr('x', 18).attr('y', 6).attr('dy', '0.32em').attr('fill', C.textH).attr('font-size', '10px').text('Specialized agents')
+  lg.append('circle').attr('cx', 6).attr('cy', 24).attr('r', 4).attr('fill', C.skill)
+  lg.append('text').attr('x', 18).attr('y', 24).attr('dy', '0.32em').attr('fill', C.textH).attr('font-size', '10px').text('Shared skills (size = reuse)')
+  sel.append('text').attr('x', w - 12).attr('y', height - 12).attr('text-anchor', 'end')
+    .attr('fill', C.muted).attr('font-size', '9px').text('Hover to trace · scroll to zoom · drag to pan')
+}
+
+/* ------------------------------------------------------------------ */
+/* HTML matrices                                                      */
+/* ------------------------------------------------------------------ */
+
+const domainRows: { domain: string; build: string; outcome: string }[] = [
+  { domain: 'Credit Ratings', build: 'Ratings platforms & analyst tooling', outcome: 'Faster, auditable rating production' },
+  { domain: 'Ratings Workflows', build: 'Workflow orchestration & automation', outcome: 'Shorter cycle time, fewer handoffs' },
+  { domain: 'Capital Markets', build: 'Collateral allocation & risk engine', outcome: 'Accurate collateral decomposition at scale' },
+  { domain: 'Commercial & Wholesale', build: 'Lending & portfolio platforms', outcome: 'Unified data across loan portfolios' },
+  { domain: 'AML / KYC', build: 'Screening & compliance pipelines', outcome: 'Regulatory-grade, audit-ready controls' },
+]
+
+function DomainMatrix() {
+  const cols = '1.1fr 1.5fr 1.5fr'
+  return (
+    <div style={{ display: 'grid', gap: '1px', background: 'rgba(208,169,85,0.22)', border: '1px solid var(--accent-border)', borderRadius: 8, overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: cols, background: '#04262b' }}>
+        {['Domain', 'What I build', 'Outcome'].map((h) => (
+          <div key={h} style={{ padding: '0.6rem 0.9rem', fontSize: '0.7rem', fontWeight: 700, color: '#d4ad5e', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{h}</div>
+        ))}
+      </div>
+      {domainRows.map((r) => (
+        <div key={r.domain} style={{ display: 'grid', gridTemplateColumns: cols, background: '#073b40' }}>
+          <div style={{ padding: '0.7rem 0.9rem', fontSize: '0.82rem', fontWeight: 600, color: '#f4f0e7' }}>{r.domain}</div>
+          <div style={{ padding: '0.7rem 0.9rem', fontSize: '0.8rem', color: '#c7b89b' }}>{r.build}</div>
+          <div style={{ padding: '0.7rem 0.9rem', fontSize: '0.8rem', color: '#c7b89b' }}>{r.outcome}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const cloudRows: { cap: string; aws: string; azure: string; gcp: string }[] = [
+  { cap: 'Compute', aws: 'EC2 · Lambda', azure: 'VMs · Functions', gcp: 'Compute Engine · Cloud Run' },
+  { cap: 'Containers', aws: 'EKS', azure: 'AKS', gcp: 'GKE' },
+  { cap: 'Databases', aws: 'Aurora · RDS · DynamoDB', azure: 'SQL DB · Cosmos DB', gcp: 'Cloud SQL · Firestore' },
+  { cap: 'Analytics', aws: 'Redshift · Athena', azure: 'Synapse', gcp: 'BigQuery' },
+  { cap: 'Streaming', aws: 'MSK · SNS/SQS', azure: 'Event Hubs', gcp: 'Pub/Sub' },
+  { cap: 'AI / ML', aws: 'Bedrock · Amazon Q', azure: 'Azure OpenAI', gcp: 'Vertex AI · Gemini' },
+  { cap: 'IaC / DevOps', aws: 'CloudFormation', azure: 'ARM / Bicep', gcp: 'Deployment Mgr' },
+]
+
+function CloudMatrix() {
+  const cols = '0.8fr 1.3fr 1.1fr 1.3fr'
+  const headers = ['', 'AWS', 'Azure', 'GCP']
+  return (
+    <div style={{ display: 'grid', gap: '1px', background: 'rgba(208,169,85,0.22)', border: '1px solid var(--accent-border)', borderRadius: 8, overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: cols, background: '#04262b' }}>
+        {headers.map((h, i) => (
+          <div key={i} style={{ padding: '0.6rem 0.9rem', fontSize: '0.72rem', fontWeight: 700, color: i === 1 ? '#d4ad5e' : '#f4f0e7', letterSpacing: '0.03em' }}>{h}</div>
+        ))}
+      </div>
+      {cloudRows.map((r) => (
+        <div key={r.cap} style={{ display: 'grid', gridTemplateColumns: cols, background: '#073b40' }}>
+          <div style={{ padding: '0.7rem 0.9rem', fontSize: '0.78rem', fontWeight: 600, color: '#f4f0e7' }}>{r.cap}</div>
+          <div style={{ padding: '0.7rem 0.9rem', fontSize: '0.78rem', color: '#e8dcc2' }}>{r.aws}</div>
+          <div style={{ padding: '0.7rem 0.9rem', fontSize: '0.78rem', color: '#c7b89b' }}>{r.azure}</div>
+          <div style={{ padding: '0.7rem 0.9rem', fontSize: '0.78rem', color: '#c7b89b' }}>{r.gcp}</div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 /* ------------------------------------------------------------------ */
@@ -465,8 +609,6 @@ const stats: { value: string; label: string }[] = [
   { value: '$1M+/yr', label: 'Vendor & cloud savings' },
   { value: '+30%', label: 'Analyst productivity' },
   { value: '+20%', label: 'Developer productivity' },
-  { value: '14', label: 'AI agents shipped' },
-  { value: '93', label: 'AI skills published' },
   { value: '20+ yrs', label: 'Engineering leadership' },
 ]
 
@@ -485,9 +627,8 @@ export default function Infographics() {
         >
           Infographics
         </h1>
-        <p style={{ color: 'var(--text)', maxWidth: 560, margin: 0 }}>
-          Outcomes, scale, and trajectory — visualized from real work, built with D3.js. Dots flow along the
-          connectors to show direction.
+        <p style={{ color: 'var(--text)', maxWidth: 580, margin: 0 }}>
+          A visual snapshot of impact, domain depth, and the scale of teams and platforms I lead.
         </p>
       </header>
 
@@ -496,63 +637,45 @@ export default function Infographics() {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
           gap: '1px',
-          background: 'var(--border)',
-          border: '1px solid var(--border)',
+          background: 'rgba(208,169,85,0.22)',
+          border: '1px solid var(--accent-border)',
           borderRadius: 12,
           overflow: 'hidden',
           marginBottom: '1.75rem',
         }}
       >
         {stats.map(({ value, label }) => (
-          <div key={label} style={{ background: 'var(--surface)', padding: '1.25rem 1rem' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent)', letterSpacing: '-0.02em' }}>
+          <div key={label} style={{ background: 'linear-gradient(160deg, #073b40, #052b31)', padding: '1.25rem 1rem' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#d4ad5e', letterSpacing: '-0.02em' }}>
               {value}
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text)', marginTop: '0.25rem' }}>{label}</div>
+            <div style={{ fontSize: '0.72rem', color: '#c7b89b', marginTop: '0.25rem' }}>{label}</div>
           </div>
         ))}
       </div>
 
-      <VizCard title="Quantified Impact" subtitle="Before → after on real initiatives — time compresses left to right.">
-        <Chart draw={drawImpact} ariaLabel="Before and after time compression for legacy analysis, portal releases, and delivery timelines" />
+      <VizCard title="Cost-Savings Waterfall" subtitle="Where the $1M+/yr run-rate savings comes from (total is real; the contribution split is indicative).">
+        <Chart draw={drawWaterfall} ariaLabel="Waterfall of annual savings from vendor consolidation, cloud right-sizing, and automation totaling over one million dollars" />
       </VizCard>
 
-      <VizCard title="AI-Assisted SDLC" subtitle="How work flows through the internal AI toolchain — dots travel along each step.">
-        <Chart draw={drawFlow} ariaLabel="Flow diagram: codebase to AI agents to generation to governance review to production" />
+      <VizCard title="Domain Coverage" subtitle="Financial-services domains I've built in — the systems and the outcomes they drove.">
+        <DomainMatrix />
       </VizCard>
 
-      <VizCard title="AI Marketplace Adoption" subtitle="Cumulative growth to org-wide adoption (endpoints actual; ramp illustrative).">
-        <Chart draw={drawAdoption} ariaLabel="Growth curve of the internal AI marketplace reaching 14 agents and 93 skills" />
+      <VizCard title="Follow-the-Sun Coverage" subtitle="Distributed teams hand off across time zones for near-continuous delivery and support.">
+        <Chart draw={drawFollowSun} ariaLabel="Time-zone coverage from India through the UK to Toronto, New York, and Chicago" />
       </VizCard>
 
-      <VizCard title="Career Trajectory" subtitle="20 years across Citigroup and Fitch Ratings — Engineer to Director.">
-        <Chart draw={drawCareer} ariaLabel="Career timeline from 2006 to present across Citigroup and Fitch Ratings" />
+      <VizCard title="Multi-Cloud Capability Matrix" subtitle="Equivalent building blocks across the three clouds I work in — AWS primary, Azure and GCP in production.">
+        <CloudMatrix />
       </VizCard>
 
-      <VizCard title="Technology Radar" subtitle="A stance on the stack — Adopt (proven), Trial (in use), Assess (exploring).">
-        <Chart draw={drawRadar} ariaLabel="Technology radar across platforms, data, languages, and AI/DevOps quadrants" />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-            gap: '1rem 1.5rem',
-            marginTop: '1.5rem',
-          }}
-        >
-          {RADAR_QUADRANTS.map((quadrant, qi) => (
-            <div key={quadrant}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', marginBottom: '0.4rem' }}>
-                {quadrant}
-              </div>
-              {radarBlips.map((b, i) => ({ ...b, n: i + 1 })).filter((b) => b.q === qi).map((b) => (
-                <div key={b.name} style={{ fontSize: '0.78rem', color: 'var(--text)', lineHeight: 1.7 }}>
-                  <span style={{ color: 'var(--text-h)', fontWeight: 600 }}>{b.n}.</span> {b.name}{' '}
-                  <span style={{ color: 'var(--text)', opacity: 0.6 }}>· {RADAR_RINGS[b.ring]}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+      <VizCard title="Agent & Skill Network" subtitle="Agents ring the edge; shared skills sit inside — the crossing links show how much the same skills are reused across agents.">
+        <Chart draw={drawNetwork} ariaLabel="Radial network: specialized agents around a ring connected to shared reusable skills at the centre" />
+      </VizCard>
+
+      <VizCard title="AI-Assisted SDLC Operating Model" subtitle="A continuous CI/CD loop — agents and skills at every stage, with a governance gate between each.">
+        <Chart draw={drawSdlc} ariaLabel="Continuous CI/CD loop from plan to operate with governance gates between stages" />
       </VizCard>
 
       {/* Tech Stack inventory */}
@@ -566,17 +689,17 @@ export default function Infographics() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid var(--accent-border)', borderRadius: 10, overflow: 'hidden' }}>
           {techStack.map(({ category, items }, i) => (
             <div
               key={category}
               className="tech-row"
-              style={{ background: i % 2 === 0 ? 'var(--surface)' : 'transparent' }}
+              style={{ background: i % 2 === 0 ? '#073b40' : '#052f34' }}
             >
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)', letterSpacing: '0.02em' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#d4ad5e', letterSpacing: '0.02em' }}>
                 {category}
               </span>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text)', lineHeight: 1.6 }}>
+              <span style={{ fontSize: '0.875rem', color: '#c7b89b', lineHeight: 1.6 }}>
                 {items}
               </span>
             </div>
@@ -588,7 +711,7 @@ export default function Infographics() {
 }
 
 const techStack = [
-  { category: 'Cloud & Platforms', items: 'AWS (EKS, Lambda, Glue, MSK, Aurora, Redshift), Azure, Kubernetes, serverless, event-driven' },
+  { category: 'Cloud & Platforms', items: 'AWS (EKS, Lambda, Glue, MSK, Aurora, Redshift), Azure, GCP, Kubernetes, serverless, event-driven' },
   { category: 'AI Engineering & Tooling', items: 'Claude Code, GitHub Copilot/CLI, AWS Kiro, Amazon Q, Gemini, Mistral, Qwen, Apple MLX; agent frameworks, AI-SDLC governance' },
   { category: 'Databases — RDBMS', items: 'Oracle, MSSQL, MySQL, PostgreSQL, AWS Aurora RDS' },
   { category: 'Databases — NoSQL', items: 'MongoDB Atlas, Apache Cassandra, Neo4J, AWS DynamoDB' },

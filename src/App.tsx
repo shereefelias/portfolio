@@ -79,8 +79,10 @@ function Layout() {
           </div>
 
           <div className="site-footer__location">
-            <p>Location</p>
+            <p>Locations</p>
             <span>New York, NY</span>
+            <span>Westfield, NJ</span>
+            <span>Greenville, SC</span>
             <span>Available for opportunities worldwide</span>
           </div>
 
