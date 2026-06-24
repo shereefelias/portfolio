@@ -17,6 +17,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Local source archives duplicated by extracted docs assets
+docs/Shereef_Elias_Approved_Logo_Assets.zip
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

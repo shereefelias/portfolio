@@ -37,48 +37,56 @@ function Layout() {
       <div style={{ flex: 1 }}>
         <Outlet />
       </div>
-      <footer style={{
-        background: 'var(--footer-bg)',
-        borderTop: '1px solid #e2e8f0',
-        padding: '2.5rem 1.5rem',
-        color: 'var(--footer-text)',
-      }}>
-        <div style={{
-          maxWidth: 1100, margin: '0 auto',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: '1.5rem',
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
-            <img src={logo} alt="Shereef Elias" style={{ height: 64, width: 'auto', display: 'block' }} />
-            <p style={{ fontSize: '0.72rem', color: '#94a3b8', margin: 0 }}>
-              &copy; {new Date().getFullYear()} Shereef Elias. All rights reserved.
-            </p>
+      <footer className="site-footer">
+        <div className="site-footer__inner">
+          <div className="site-footer__brand">
+            <img src={logo} alt="Shereef Elias" />
+            <div>
+              <p>Shereef Elias</p>
+              <span>Director of Engineering</span>
+              <small>
+                Engineering leader driving cloud, data, and AI powered
+                solutions for capital markets and risk platforms.
+              </small>
+            </div>
           </div>
 
-          <div style={{
-            display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start',
-            background: '#e8edf2', border: '1px solid #cbd5e1', borderRadius: 10,
-            padding: '0.875rem 1.25rem',
-          }}>
-            <a href="mailto:shereef.elias@gmail.com" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              color: '#0d1b2a', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
-            }}>
-              <MailIcon /> Email
-            </a>
-            <a href="https://www.linkedin.com/in/shereefelias/" target="_blank" rel="noreferrer" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              color: '#0d1b2a', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
-            }}>
-              <LinkedInIcon /> LinkedIn
-            </a>
-            <a href="https://cal.com/shereefelias/30min" target="_blank" rel="noreferrer" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              color: '#0d1b2a', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
-            }}>
-              <VideoIcon /> Book a Call
-            </a>
+          <div className="site-footer__nav">
+            <p>Navigation</p>
+            <div>
+              <a href="/">Home</a>
+              <a href="/about">About</a>
+              <a href="/advisory">Advisory</a>
+              <a href="/work">Work</a>
+              <a href="/infographics">Infographics</a>
+              <a href="/system-design">System Design</a>
+            </div>
           </div>
+
+          <div className="site-footer__connect">
+            <p>Connect</p>
+            <div className="site-footer__links" aria-label="Contact links">
+              <a href="mailto:shereef.elias@gmail.com" aria-label="Email">
+              <MailIcon /> Email
+              </a>
+              <a href="https://www.linkedin.com/in/shereefelias/" target="_blank" rel="noreferrer" aria-label="LinkedIn">
+              <LinkedInIcon /> LinkedIn
+              </a>
+              <a href="https://cal.com/shereefelias/30min" target="_blank" rel="noreferrer" aria-label="Book a call">
+              <VideoIcon /> Book a Call
+              </a>
+            </div>
+          </div>
+
+          <div className="site-footer__location">
+            <p>Location</p>
+            <span>New York, NY</span>
+            <span>Available for opportunities worldwide</span>
+          </div>
+
+          <p className="site-footer__copyright">
+            &copy; {new Date().getFullYear()} Shereef Elias. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

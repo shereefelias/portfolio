@@ -18,13 +18,15 @@ const links: NavItem[] = [
 
 const linkStyle = ({ isActive }: { isActive: boolean }) => ({
   display: 'block',
-  padding: '0.375rem 0.75rem',
-  borderRadius: 6,
-  fontSize: '0.875rem',
-  fontWeight: isActive ? 600 : 400,
+  padding: '0.45rem 0.2rem',
+  borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
+  fontSize: '0.72rem',
+  fontWeight: 700,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase' as const,
   color: isActive ? 'var(--accent)' : 'var(--nav-text)',
-  background: isActive ? 'var(--accent-dim)' : 'transparent',
-  transition: 'color 0.15s, background 0.15s',
+  background: 'transparent',
+  transition: 'color 0.15s, border-color 0.15s',
   textDecoration: 'none',
 })
 
@@ -38,17 +40,22 @@ export default function Nav() {
         top: 0,
         zIndex: 50,
         background: 'var(--nav-bg)',
-        borderBottom: '1px solid #e2e8f0',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+        borderBottom: '1px solid var(--border)',
+        boxShadow: '0 8px 30px rgba(6,49,59,0.08)',
+        backdropFilter: 'blur(14px)',
       }}
     >
       <div className="nav-inner">
-        <NavLink to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} onClick={() => setIsOpen(false)}>
+        <NavLink to="/" className="nav-brand" onClick={() => setIsOpen(false)}>
           <img
             src={logo}
             alt="Shereef Elias"
-            style={{ height: 52, width: 'auto', display: 'block' }}
+            className="nav-brand__mark"
           />
+          <span className="nav-brand__text">
+            <span>Shereef Elias</span>
+            <span>Director of Engineering</span>
+          </span>
         </NavLink>
 
         {/* Desktop links */}
