@@ -53,14 +53,15 @@ const clients: Client[] = [
 export default function Advisory() {
   return (
     <main className="page-main">
-      <header style={{ marginBottom: '3rem' }}>
+      <header className="page-hero">
+        <span className="page-hero__eyebrow">Founding Technical Advisor</span>
         <h1 style={{
           fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800,
-          letterSpacing: '-0.03em', color: 'var(--text-h)', margin: '0 0 0.5rem',
+          letterSpacing: '-0.03em', margin: '0 0 0.5rem',
         }}>
           Advisory
         </h1>
-        <p style={{ color: 'var(--text)', maxWidth: 660, margin: 0, lineHeight: 1.7 }}>
+        <p style={{ maxWidth: 660, margin: 0, lineHeight: 1.7 }}>
           Outside of my full-time roles I've served as a founding technical advisor to early-stage
           companies — covering everything from IT infrastructure and cloud architecture to SEO,
           social media, operations, hiring, and how enterprise businesses actually run.
@@ -79,15 +80,7 @@ export default function Advisory() {
 
 function ClientCard({ client }: { client: Client }) {
   return (
-    <article
-      style={{
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 12, padding: '1.75rem',
-        transition: 'border-color 0.2s',
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-border)' }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
-    >
+    <article className="content-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
         <div>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-h)', margin: '0 0 0.2rem' }}>
@@ -108,7 +101,7 @@ function ClientCard({ client }: { client: Client }) {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.3rem', flexShrink: 0 }}>
           <span style={{
             fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: 4,
-            background: 'rgba(0,217,255,0.08)', color: 'var(--accent)', fontWeight: 600,
+            background: 'var(--accent-dim)', color: 'var(--accent)', fontWeight: 600,
           }}>
             {client.industry}
           </span>

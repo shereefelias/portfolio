@@ -26,19 +26,19 @@ const diagrams: Diagram[] = [
   },
   {
     id: 3,
-    title: 'CMBS Hybrid Cloud Serverless Platform',
+    title: 'CMBS Hybrid-Cloud Event-Driven Platform',
     company: 'Fitch Ratings',
-    description: 'Replacement for Rockport/Trepp vendor infrastructure — in-house serverless platform for CMBS deal onboarding, financial model generation, and surveillance.',
-    detail: 'Key design decision: serverless-first for variable analytical workloads, with persistent Aurora RDS for transactional state. AWS Glue handles ETL between data lake (S3/Parquet) and the analytical layer. All infrastructure as code via Terraform, deployed through GitHub Actions CI/CD. Saved $1M+/year in vendor fees with 30% analyst productivity improvement.',
-    tags: ['AWS Lambda', 'AWS Glue', 'Aurora RDS', 'S3', 'Parquet', 'Terraform', 'Serverless'],
+    description: 'Replacement for Rockport/Trepp vendor infrastructure — an in-house, event-driven platform on EKS for CMBS deal onboarding, financial model generation, and surveillance.',
+    detail: 'Key design decisions: containerized, event-driven services on EKS with Apache Kafka for streaming and Apache Airflow orchestrating multi-step analytical workflows, fronted by FastAPI services. Transactional state lives in Aurora RDS (PostgreSQL) and MariaDB; a curated S3/Parquet data lake is queried through Starburst (Trino). Deployed through GitHub Actions CI/CD. Saved $1M+/year in vendor fees with 30% analyst productivity improvement.',
+    tags: ['AWS EKS', 'Apache Airflow', 'FastAPI', 'Apache Kafka', 'Event-Driven', 'Aurora PostgreSQL', 'MariaDB', 'Starburst (Trino)', 'S3 / Parquet'],
   },
   {
     id: 4,
-    title: 'AML Graph-Based Entity Resolution',
+    title: 'AML Entity Resolution & Surveillance Analytics',
     company: 'Citigroup',
-    description: 'Graph-based entity-resolution and data mining system across AML and Global Compliance — modeling customer-risk networks and transactional linkages.',
-    detail: 'Core problem: traditional relational models couldn\'t capture multi-hop relationships between accounts, entities, and transactions used in money laundering. Solution: graph model where nodes represent customers, accounts, and legal entities; edges represent transactions and ownership relationships. Pattern detection queries traverse the graph to surface suspicious relationship clusters for analyst review.',
-    tags: ['Graph Databases', 'Neo4j', 'AML', 'Entity Resolution', 'Data Mining', 'Compliance'],
+    description: 'Entity-resolution and data-mining system across AML and Global Compliance — modeling customer-risk relationships and transactional linkages for surveillance alerting.',
+    detail: 'Core problem: surfacing suspicious relationships and linkages buried across high-volume accounts, entities, and transactions. Solution: advanced analytical SQL on Oracle and Microsoft SQL Server — set-based linkage and clustering logic — with SSIS pipelines feeding the data and SSAS cubes powering multidimensional analysis, plus Python for the heavier data-mining routines. Detection queries surface suspicious relationship clusters and transactional patterns for analyst review.',
+    tags: ['Oracle', 'Microsoft SQL Server', 'SSIS', 'SSAS', 'Advanced Analytical SQL', 'Python', 'AML', 'Entity Resolution'],
   },
   {
     id: 5,
@@ -53,14 +53,15 @@ const diagrams: Diagram[] = [
 export default function SystemDesign() {
   return (
     <main className="page-main">
-      <header style={{ marginBottom: '3rem' }}>
+      <header className="page-hero">
+        <span className="page-hero__eyebrow">Architecture &amp; Trade-offs</span>
         <h1 style={{
           fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800,
-          letterSpacing: '-0.03em', color: 'var(--text-h)', margin: '0 0 0.5rem',
+          letterSpacing: '-0.03em', margin: '0 0 0.5rem',
         }}>
           System Design
         </h1>
-        <p style={{ color: 'var(--text)', maxWidth: 600, margin: 0, lineHeight: 1.7 }}>
+        <p style={{ maxWidth: 600, margin: 0, lineHeight: 1.7 }}>
           Architecture decisions, trade-off analyses, and platform designs from 20 years
           of building production systems in financial services. Interactive diagrams coming soon.
         </p>
@@ -77,15 +78,7 @@ export default function SystemDesign() {
 
 function DiagramCard({ diagram }: { diagram: Diagram }) {
   return (
-    <article
-      style={{
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 12, padding: '1.75rem',
-        transition: 'border-color 0.2s',
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-border)' }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
-    >
+    <article className="content-card">
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
@@ -121,7 +114,7 @@ function DiagramCard({ diagram }: { diagram: Diagram }) {
 
         <div style={{
           width: 64, height: 64, borderRadius: 8, flexShrink: 0,
-          background: 'rgba(0,217,255,0.06)', border: '1px solid var(--accent-border)',
+          background: 'var(--accent-dim)', border: '1px solid var(--accent-border)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" aria-hidden="true">
