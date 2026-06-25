@@ -923,3 +923,86 @@ button, input, textarea, select {
     transform: none;
   }
 }
+
+/* ── Inner-page brand theming (Work, Advisory, System Design, About) ── */
+
+/* Dark-teal hero band that anchors the top of each inner page */
+.page-hero {
+  position: relative;
+  background: linear-gradient(150deg, var(--teal-900) 0%, var(--teal-800) 58%, #0a474a 100%);
+  border: 1px solid rgba(208, 169, 85, 0.30);
+  border-radius: 16px;
+  padding: 2.4rem 2.2rem;
+  margin-bottom: 2.75rem;
+  overflow: hidden;
+}
+
+.page-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 88% 12%, rgba(208, 169, 85, 0.16), transparent 60%);
+  pointer-events: none;
+}
+
+.page-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.page-hero h1 {
+  color: #fffdf7;
+}
+
+.page-hero p {
+  color: rgba(244, 240, 231, 0.82);
+}
+
+.page-hero strong {
+  color: #fffdf7;
+}
+
+.page-hero__eyebrow {
+  display: inline-block;
+  color: var(--gold-strong);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.9rem;
+}
+
+/* Light content cards with a subtle teal accent edge + CSS-driven hover
+   (replaces the inline JS hover handlers the project guidelines discourage) */
+.content-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal-700);
+  border-radius: 12px;
+  padding: 1.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.content-card:hover {
+  border-color: var(--accent-border);
+  border-left-color: var(--gold-strong);
+  box-shadow: 0 10px 30px rgba(6, 49, 59, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content-card {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-hero {
+    padding: 1.6rem 1.25rem;
+    margin-bottom: 1.75rem;
+    border-radius: 12px;
+  }
+
+  .content-card {
+    padding: 1.25rem;
+  }
+}

@@ -139,78 +139,100 @@ function VizCard({ title, subtitle, children }: { title: string; subtitle: strin
 
 interface WfStep {
   label: string
-  value: number
-  kind: 'inc' | 'total'
+  value: number // $M — annual vendor fee at that point; the replaced bar ≈ $0
+  kind: 'fee' | 'replaced'
+  note?: string
 }
 
-// Total ($1M+/yr) is real; the contribution split is approximate — edit freely.
+// Real story: the vendor fee kept climbing — $0.5M, then $0.75M, then a $1.4M renewal
+// quote (hikes went from roughly every two years to annual). I replaced it with an
+// ephemeral Airflow-on-EKS pattern (spin up EKS → run the job → terminate, instead of
+// 7 always-on 32 GB EC2 instances), collapsing the run-rate to pay-per-run ≈ $0.
 const savings: WfStep[] = [
-  { label: 'Vendor & license consolidation', value: 0.45, kind: 'inc' },
-  { label: 'Cloud right-sizing & FinOps', value: 0.35, kind: 'inc' },
-  { label: 'Automation & toil reduction', value: 0.25, kind: 'inc' },
-  { label: 'Annual run-rate', value: 1.05, kind: 'total' },
+  { label: 'Initial vendor fee', value: 0.5, kind: 'fee', note: 'starting price' },
+  { label: 'Renewal', value: 0.75, kind: 'fee', note: '+50% · ~every 2 yrs' },
+  { label: 'Latest quote', value: 1.4, kind: 'fee', note: '+87% · now yearly' },
+  { label: 'Replaced — ephemeral Airflow-on-EKS', value: 0.05, kind: 'replaced', note: 'pay-per-run ≈ $0' },
 ]
+
+const fmtFee = (v: number) => (v < 1 ? `$${Math.round(v * 1000)}k` : `$${v.toFixed(2)}M`)
 
 const drawWaterfall: Draw = (svg, width) => {
   const sel = d3.select(svg)
   sel.selectAll('*').remove()
-  const margin = { top: 28, right: 16, bottom: 56, left: 48 }
-  const w = Math.max(width, 320)
+  const margin = { top: 38, right: 16, bottom: 72, left: 50 }
+  const w = Math.max(width, 340)
   const innerW = w - margin.left - margin.right
-  const innerH = 220
+  const innerH = 240
   const height = innerH + margin.top + margin.bottom
   sel.attr('width', w).attr('height', height)
+  addArrowMarker(sel, 'wf-arrow', C.accent)
   const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
-  const y = d3.scaleLinear().domain([0, 1.15]).range([innerH, 0])
-  const x = d3.scaleBand<string>().domain(savings.map((s) => s.label)).range([0, innerW]).padding(0.42)
+  const y = d3.scaleLinear().domain([0, 1.5]).range([innerH, 0])
+  const x = d3.scaleBand<string>().domain(savings.map((s) => s.label)).range([0, innerW]).padding(0.4)
+  const cx = (s: WfStep) => (x(s.label) ?? 0) + x.bandwidth() / 2
 
-  const yTicks = [0, 0.25, 0.5, 0.75, 1.0]
+  const yTicks = [0, 0.5, 1.0, 1.5]
   g.selectAll('.gl').data(yTicks).enter().append('line')
     .attr('x1', 0).attr('x2', innerW).attr('y1', (d) => y(d)).attr('y2', (d) => y(d))
     .attr('stroke', C.grid).attr('stroke-dasharray', '3,3')
   g.selectAll('.gll').data(yTicks).enter().append('text')
     .attr('x', -8).attr('y', (d) => y(d)).attr('dy', '0.32em').attr('text-anchor', 'end')
-    .attr('fill', C.muted).attr('font-size', '9px').text((d) => `$${d.toFixed(2)}M`)
+    .attr('fill', C.muted).attr('font-size', '9px').text((d) => `$${d.toFixed(1)}M`)
 
-  let cum = 0
-  const bars = savings.map((s) => {
-    if (s.kind === 'total') return { ...s, y0: 0, y1: s.value }
-    const y0 = cum
-    cum += s.value
-    return { ...s, y0, y1: cum }
-  })
+  // escalating trend line through the three climbing vendor-fee bars
+  const fees = savings.filter((s) => s.kind === 'fee')
+  const trend = d3.line<WfStep>().x((s) => cx(s)).y((s) => y(s.value))
+  g.append('path').datum(fees).attr('d', trend).attr('fill', 'none')
+    .attr('stroke', C.accent).attr('stroke-width', 1.5).attr('stroke-dasharray', '4,3').attr('opacity', 0)
+    .transition().duration(600).delay(300).attr('opacity', 0.5)
 
-  const grp = g.selectAll('.bar').data(bars).enter().append('g')
+  // columns — fees climb from the baseline; the replaced bar is a near-zero sliver
+  const grp = g.selectAll('.bar').data(savings).enter().append('g')
   grp.append('rect')
     .attr('x', (d) => x(d.label) ?? 0).attr('width', x.bandwidth())
     .attr('y', innerH).attr('height', 0).attr('rx', 4)
-    .attr('fill', (d) => (d.kind === 'total' ? C.accent : C.accentSoft))
-    .attr('stroke', C.accent).attr('stroke-width', (d) => (d.kind === 'total' ? 0 : 1.2))
-    .transition().duration(700).delay((_, i) => i * 140)
-    .attr('y', (d) => y(d.y1)).attr('height', (d) => y(d.y0) - y(d.y1))
+    .attr('fill', (d) => (d.kind === 'replaced' ? C.accent : C.accentSoft))
+    .attr('stroke', C.accent).attr('stroke-width', (d) => (d.kind === 'replaced' ? 0 : 1.2))
+    .transition().duration(650).delay((_, i) => i * 150)
+    .attr('y', (d) => y(d.value)).attr('height', (d) => Math.max(2, innerH - y(d.value)))
 
+  // value labels above each bar
   grp.append('text')
-    .attr('x', (d) => (x(d.label) ?? 0) + x.bandwidth() / 2).attr('y', (d) => y(d.y1) - 7)
-    .attr('text-anchor', 'middle').attr('fill', (d) => (d.kind === 'total' ? C.textH : C.accent))
-    .attr('font-size', '11px').attr('font-weight', 700)
-    .attr('opacity', 0)
-    .text((d) => (d.kind === 'total' ? `$${d.value.toFixed(2)}M+` : `+$${d.value.toFixed(2)}M`))
-    .transition().duration(400).delay((_, i) => 500 + i * 140).attr('opacity', 1)
+    .attr('x', (d) => cx(d)).attr('y', (d) => y(d.value) - 9)
+    .attr('text-anchor', 'middle').attr('fill', (d) => (d.kind === 'replaced' ? C.accent : C.textH))
+    .attr('font-size', '12px').attr('font-weight', 700).attr('opacity', 0)
+    .text((d) => (d.kind === 'replaced' ? '≈ $0' : fmtFee(d.value)))
+    .transition().duration(400).delay((_, i) => 480 + i * 150).attr('opacity', 1)
 
-  for (let i = 0; i < bars.length - 1; i++) {
-    if (bars[i + 1].kind === 'total') continue
-    const xc = x(bars[i].label) ?? 0
-    g.append('line')
-      .attr('x1', xc + x.bandwidth()).attr('x2', x(bars[i + 1].label) ?? 0)
-      .attr('y1', y(bars[i].y1)).attr('y2', y(bars[i].y1))
-      .attr('stroke', C.muted).attr('stroke-dasharray', '2,3')
-  }
+  // savings annotation — dashed elbow from the $1.4M quote down to the replaced run-rate
+  const quote = savings[2]
+  const repl = savings[3]
+  const x2 = cx(quote)
+  const x3 = cx(repl)
+  g.append('path')
+    .attr('d', `M ${x2},${y(quote.value)} C ${x2 + 34},${y(quote.value)} ${x3 - 34},${y(repl.value) - 16} ${x3},${y(repl.value) - 14}`)
+    .attr('fill', 'none').attr('stroke', C.accent).attr('stroke-width', 1.6)
+    .attr('stroke-dasharray', '3,3').attr('marker-end', 'url(#wf-arrow)').attr('opacity', 0)
+    .transition().duration(500).delay(1000).attr('opacity', 0.9)
+  g.append('text').attr('x', (x2 + x3) / 2).attr('y', y(0.92)).attr('text-anchor', 'middle')
+    .attr('fill', C.accent).attr('font-size', '12px').attr('font-weight', 800).attr('opacity', 0)
+    .text('−$1.40M/yr')
+    .transition().duration(400).delay(1150).attr('opacity', 1)
 
+  // x-axis labels (wrapped) + a small italic note line under each
   grp.append('text')
-    .attr('x', (d) => (x(d.label) ?? 0) + x.bandwidth() / 2).attr('y', innerH + 16)
+    .attr('x', (d) => cx(d)).attr('y', innerH + 16)
     .attr('text-anchor', 'middle').attr('fill', C.text).attr('font-size', '9.5px')
-    .each(function (this: SVGTextElement, d) { wrapLabel(this, d.label, Math.max(12, Math.floor(x.bandwidth() / 5))) })
+    .each(function (this: SVGTextElement, d) {
+      wrapLabel(this, d.label, Math.max(12, Math.floor(x.bandwidth() / 5)))
+      if (d.note) {
+        d3.select(this).append('tspan').attr('x', this.getAttribute('x'))
+          .attr('dy', '1.3em').attr('fill', C.muted).attr('font-size', '8.5px')
+          .attr('font-style', 'italic').text(d.note)
+      }
+    })
 }
 
 /* ------------------------------------------------------------------ */
@@ -226,7 +248,7 @@ interface Hub {
 
 // Local 09:00–17:00 mapped to UTC.
 const hubs: Hub[] = [
-  { city: 'Bengaluru, India', tz: 'IST · UTC+5:30', startUTC: 3.5, endUTC: 11.5 },
+  { city: 'Chennai, India', tz: 'IST · UTC+5:30', startUTC: 3.5, endUTC: 11.5 },
   { city: 'Manchester, UK', tz: 'GMT · UTC+0', startUTC: 9, endUTC: 17 },
   { city: 'London, UK', tz: 'GMT · UTC+0', startUTC: 9, endUTC: 17 },
   { city: 'Toronto, Canada', tz: 'ET · UTC−5', startUTC: 14, endUTC: 22 },
@@ -544,11 +566,10 @@ const drawNetwork: Draw = (svg, width) => {
 /* ------------------------------------------------------------------ */
 
 const domainRows: { domain: string; build: string; outcome: string }[] = [
-  { domain: 'Credit Ratings', build: 'Ratings platforms & analyst tooling', outcome: 'Faster, auditable rating production' },
-  { domain: 'Ratings Workflows', build: 'Workflow orchestration & automation', outcome: 'Shorter cycle time, fewer handoffs' },
-  { domain: 'Capital Markets', build: 'Collateral allocation & risk engine', outcome: 'Accurate collateral decomposition at scale' },
-  { domain: 'Commercial & Wholesale', build: 'Lending & portfolio platforms', outcome: 'Unified data across loan portfolios' },
-  { domain: 'AML / KYC', build: 'Screening & compliance pipelines', outcome: 'Regulatory-grade, audit-ready controls' },
+  { domain: 'Ratings Workflow Solutions', build: 'Credit-ratings & supporting systems for Structured Finance, Public Finance & Sovereigns', outcome: 'Analysts focus on the rating — the rest is one click' },
+  { domain: 'Institutional Clients (ICG)', build: 'Compliance analytics & regulatory testing for top institutional clients', outcome: '10× productivity across FINRA, CFPB & Basel II' },
+  { domain: 'Commercial Wholesale', build: 'Collateral allocation & risk-calculation engine', outcome: 'Accurate collateral decomposition, no double-counting' },
+  { domain: 'AML / KYC', build: 'Graph entity-resolution & screening pipelines', outcome: 'Regulatory-grade, audit-ready controls' },
 ]
 
 function DomainMatrix() {
@@ -606,7 +627,7 @@ function CloudMatrix() {
 /* ------------------------------------------------------------------ */
 
 const stats: { value: string; label: string }[] = [
-  { value: '$1M+/yr', label: 'Vendor & cloud savings' },
+  { value: '$1.4M/yr', label: 'Vendor fee eliminated' },
   { value: '+30%', label: 'Analyst productivity' },
   { value: '+20%', label: 'Developer productivity' },
   { value: '20+ yrs', label: 'Engineering leadership' },
@@ -654,8 +675,8 @@ export default function Infographics() {
         ))}
       </div>
 
-      <VizCard title="Cost-Savings Waterfall" subtitle="Where the $1M+/yr run-rate savings comes from (total is real; the contribution split is indicative).">
-        <Chart draw={drawWaterfall} ariaLabel="Waterfall of annual savings from vendor consolidation, cloud right-sizing, and automation totaling over one million dollars" />
+      <VizCard title="Cost-Savings Waterfall" subtitle="The vendor fee kept climbing — $500k, then $750k, then a $1.4M quote, with hikes going from every two years to annual. I replaced it with ephemeral Airflow-on-EKS — spin up, run the job, terminate, instead of 7 always-on 32 GB EC2 boxes — collapsing it to a pay-per-run ≈ $0.">
+        <Chart draw={drawWaterfall} ariaLabel="Column chart showing the vendor fee escalating from 500 thousand to 750 thousand to 1.4 million dollars per year, then dropping to near zero after replacement with ephemeral Airflow on EKS, saving 1.4 million dollars a year" />
       </VizCard>
 
       <VizCard title="Domain Coverage" subtitle="Financial-services domains I've built in — the systems and the outcomes they drove.">
