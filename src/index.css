@@ -111,8 +111,7 @@ button, input, textarea, select {
   color: var(--text-h);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.28rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .nav-brand__text span:last-child {
@@ -472,10 +471,9 @@ button, input, textarea, select {
   color: #fffdf7;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.22rem;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
   line-height: 1;
   margin: 0;
-  text-transform: uppercase;
 }
 
 .site-footer__brand span,
