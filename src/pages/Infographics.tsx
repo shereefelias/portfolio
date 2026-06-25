@@ -387,7 +387,79 @@ const agentHubs = [
   'Quorum SDLC', 'Python', 'Rust', 'Database', 'Frontend', 'Apple',
   'Playwright', 'MCP', 'Security', 'Codemod', 'Excel/Office', 'Skill-builder',
 ]
-const SKILL_COUNT = 46
+// Real skill data from README matrix.
+// Agent indices match agentHubs order:
+// 0=Quorum SDLC  1=Python  2=Rust   3=Database  4=Frontend  5=Apple
+// 6=Playwright   7=MCP     8=Security  9=Codemod  10=Excel/Office  11=Skill-builder
+const SKILLS: { name: string; agents: number[] }[] = [
+  { name: 'agent-orchestration', agents: [7] },
+  { name: 'agentic-eval', agents: [7, 11] },
+  { name: 'airflow', agents: [1] },
+  { name: 'ast-grep', agents: [9] },
+  { name: 'audit-integrity', agents: [3, 1, 2, 5, 8] },
+  { name: 'brownfield-analysis', agents: [10, 0, 7, 8] },
+  { name: 'claude-api', agents: [7] },
+  { name: 'create-architectural-decision-record', agents: [3, 1, 2, 4, 5, 0, 7] },
+  { name: 'creating-oracle-to-postgres-plan', agents: [3] },
+  { name: 'doc-coauthoring', agents: [0, 7, 8] },
+  { name: 'docker', agents: [3, 1, 2, 7] },
+  { name: 'excel-compare', agents: [10] },
+  { name: 'excel-vba-standards', agents: [10] },
+  { name: 'fastapi', agents: [1] },
+  { name: 'file-reader', agents: [10] },
+  { name: 'gdpr-compliant', agents: [3, 10, 1, 4, 8] },
+  { name: 'gherkin-bdd', agents: [3, 10, 1, 9, 0, 7, 8] },
+  { name: 'interactive-infographics', agents: [0] },
+  { name: 'javascript', agents: [4, 6] },
+  { name: 'kafka', agents: [1] },
+  { name: 'kubernetes', agents: [1] },
+  { name: 'laws-of-software-engineering', agents: [3, 10, 1, 2, 4, 5, 9, 0, 7, 8] },
+  { name: 'make-repo-contribution', agents: [0, 7] },
+  { name: 'mcp-builder', agents: [7] },
+  { name: 'meeting-minutes', agents: [8] },
+  { name: 'migrating-oracle-to-postgres-sp', agents: [3] },
+  { name: 'nextjs', agents: [4] },
+  { name: 'oracle-sql', agents: [3] },
+  { name: 'pci-dss-compliant', agents: [8] },
+  { name: 'persistent-memory-setup', agents: [7] },
+  { name: 'plantuml-ascii', agents: [3, 0] },
+  { name: 'playwright', agents: [1, 4, 6] },
+  { name: 'polars-duckdb', agents: [1] },
+  { name: 'postgresql-sql', agents: [3] },
+  { name: 'prd', agents: [0] },
+  { name: 'pytest-coverage', agents: [1] },
+  { name: 'python', agents: [1, 9, 7] },
+  { name: 'quorum', agents: [0] },
+  { name: 'react', agents: [4] },
+  { name: 'react-native', agents: [4] },
+  { name: 'readme-generator', agents: [0, 7, 8] },
+  { name: 'redis', agents: [1] },
+  { name: 'refactor', agents: [1, 9] },
+  { name: 'ruff-recursive-fix', agents: [1, 9] },
+  { name: 'rust-async', agents: [2] },
+  { name: 'rust-concurrency', agents: [2] },
+  { name: 'rust-core', agents: [2] },
+  { name: 'rust-idiomatic', agents: [2] },
+  { name: 'rust-testing', agents: [2] },
+  { name: 'rust-unsafe', agents: [2] },
+  { name: 'sast-dependency-scanning', agents: [8] },
+  { name: 'security-review', agents: [8] },
+  { name: 'seo-content-strategy', agents: [4] },
+  { name: 'seo-performance-monitor', agents: [4] },
+  { name: 'seo-schema-markup', agents: [4] },
+  { name: 'seo-technical-audit', agents: [4] },
+  { name: 'shell-scripting', agents: [3, 1, 2, 4, 5, 6] },
+  { name: 'soc2-compliant', agents: [8] },
+  { name: 'sql-optimization', agents: [3] },
+  { name: 'swift-macos', agents: [5] },
+  { name: 'swiftui', agents: [5] },
+  { name: 'typescript-advanced-types', agents: [10, 4, 6, 7] },
+  { name: 'vba-code-review', agents: [10] },
+  { name: 'web-design-guidelines', agents: [4] },
+  { name: 'skill-creator', agents: [11] },
+  { name: 'subagent-designer', agents: [11] },
+  { name: 'agent-architect', agents: [11] },
+]
 
 interface NetNode extends d3.SimulationNodeDatum {
   id: string
@@ -406,40 +478,35 @@ const drawNetwork: Draw = (svg, width) => {
   const sel = d3.select(svg)
   sel.selectAll('*').remove()
   const w = Math.max(width, 320)
-  const height = Math.min(Math.max(w * 0.82, 380), 540)
+  const height = Math.min(Math.max(w * 0.82, 380), 620)
   sel.attr('width', w).attr('height', height)
   const cx = w / 2
   const cy = height / 2
   const R = Math.min(w, height) / 2 - 58 // agent-ring radius (leaves room for labels)
 
-  // Agents fixed evenly around the ring.
+  // Agents fixed evenly around the ring; deg = skill count for tooltip.
   const nA = agentHubs.length
   const agents: NetNode[] = agentHubs.map((nm, i) => {
     const ang = (i / nA) * 2 * Math.PI - Math.PI / 2
     const x = cx + R * Math.cos(ang)
     const y = cy + R * Math.sin(ang)
-    return { id: `a${i}`, type: 'agent', label: nm, r: 9, ang, x, y, fx: x, fy: y }
+    const skillCount = SKILLS.filter((s) => s.agents.includes(i)).length
+    return { id: `a${i}`, type: 'agent', label: nm, r: 9, ang, x, y, fx: x, fy: y, deg: skillCount }
   })
 
-  // Skills start near the centre; the simulation pulls each toward the agents that use it.
-  const skills: NetNode[] = []
-  for (let i = 0; i < SKILL_COUNT; i++) {
-    const k = 2 + (i % 3) // each skill is shared by 2–4 agents → overlap
-    skills.push({
-      id: `s${i}`, type: 'skill', r: 3.2 + (k - 2) * 1.6, deg: k,
-      x: cx + (i % 7 - 3) * 6, y: cy + ((i % 5) - 2) * 6,
-    })
-  }
+  // Skills start near the centre; simulation pulls each toward its agents. Size by reuse.
+  const skills: NetNode[] = SKILLS.map((s, i) => ({
+    id: `s${i}`, type: 'skill', label: s.name,
+    r: 3.5 + (s.agents.length - 1) * 0.85,
+    deg: s.agents.length,
+    x: cx + (i % 7 - 3) * 6, y: cy + ((i % 5) - 2) * 6,
+  }))
   const nodes: NetNode[] = [...agents, ...skills]
 
-  // Each skill connects to k distinct agents spread around the ring.
-  const links: NetLink[] = []
-  for (let i = 0; i < SKILL_COUNT; i++) {
-    const k = 2 + (i % 3)
-    const start = i % nA
-    const step = 1 + (i % 3)
-    for (let j = 0; j < k; j++) links.push({ source: `s${i}`, target: `a${(start + j * step) % nA}` })
-  }
+  // Real connections from README matrix.
+  const links: NetLink[] = SKILLS.flatMap((s, i) =>
+    s.agents.map((agentIdx) => ({ source: `s${i}`, target: `a${agentIdx}` }))
+  )
 
   const sim = d3
     .forceSimulation<NetNode>(nodes)
@@ -449,7 +516,7 @@ const drawNetwork: Draw = (svg, width) => {
     .force('x', d3.forceX<NetNode>(cx).strength(0.03))
     .force('y', d3.forceY<NetNode>(cy).strength(0.03))
     .stop()
-  for (let i = 0; i < 420; i++) sim.tick()
+  for (let i = 0; i < 500; i++) sim.tick()
 
   // Keep skills inside the ring.
   skills.forEach((n) => {
@@ -505,13 +572,11 @@ const drawNetwork: Draw = (svg, width) => {
   const skillSel = g.append('g').selectAll<SVGCircleElement, NetNode>('circle').data(skills).enter().append('circle')
     .attr('cx', (d) => d.x ?? 0).attr('cy', (d) => d.y ?? 0).attr('r', 0)
     .attr('fill', C.skill).attr('opacity', 0.95).style('cursor', 'pointer')
-  skillSel.append('title').text((d) => `Skill · shared by ${d.deg} agents`)
-  skillSel.transition().duration(450).delay((_, i) => i * 8).attr('r', (d) => d.r)
+  skillSel.transition().duration(450).delay((_, i) => i * 6).attr('r', (d) => d.r)
 
   const agSel = g.append('g').selectAll<SVGGElement, NetNode>('g').data(agents).enter().append('g').style('cursor', 'pointer')
   const agCircle = agSel.append('circle').attr('cx', (d) => d.x ?? 0).attr('cy', (d) => d.y ?? 0).attr('r', 0)
     .attr('fill', C.accent).attr('stroke', C.panel).attr('stroke-width', 2)
-  agCircle.append('title').text((d) => d.label ?? '')
   agCircle.transition().duration(500).delay((_, i) => i * 30).attr('r', (d) => d.r)
   const agLabel = agSel.append('text')
     .attr('x', (d) => cx + (R + 16) * Math.cos(d.ang ?? 0))
@@ -525,6 +590,25 @@ const drawNetwork: Draw = (svg, width) => {
     .attr('stroke', C.panel).attr('stroke-width', 3).attr('paint-order', 'stroke')
     .attr('opacity', 0).text((d) => d.label ?? '')
   agLabel.transition().duration(400).delay(600).attr('opacity', 1)
+
+  // Floating SVG tooltip — rendered outside the zoom group so it stays fixed and on top.
+  const ttip = sel.append('g').attr('pointer-events', 'none').attr('opacity', 0)
+  const ttRect = ttip.append('rect').attr('rx', 5).attr('height', 34)
+    .attr('fill', '#042830').attr('stroke', 'rgba(208,169,85,0.55)').attr('stroke-width', 1)
+  const ttTitle = ttip.append('text').attr('fill', '#f4f0e7').attr('font-size', '11px').attr('font-weight', 700)
+  const ttSub = ttip.append('text').attr('fill', '#b9ac90').attr('font-size', '9.5px')
+
+  function showTip(event: MouseEvent, title: string, sub: string) {
+    const [mx, my] = d3.pointer(event, sel.node() as Element)
+    const px = Math.min(mx + 14, w - 180)
+    const py = Math.max(my - 42, 4)
+    ttTitle.attr('x', px + 8).attr('y', py + 14).text(title)
+    ttSub.attr('x', px + 8).attr('y', py + 26).text(sub)
+    const tw = Math.max(title.length * 6.5, sub.length * 5.5)
+    ttRect.attr('x', px).attr('y', py).attr('width', tw + 16)
+    ttip.attr('opacity', 1)
+  }
+  function hideTip() { ttip.attr('opacity', 0) }
 
   // hover: trace a node's connections
   const isOn = (a: string, id: string, nbr: Set<string>) => a === id || nbr.has(a)
@@ -543,8 +627,20 @@ const drawNetwork: Draw = (svg, width) => {
     agCircle.attr('opacity', 1)
     agLabel.attr('opacity', 1)
   }
-  agSel.on('mouseenter', (_e, d) => highlight(d.id)).on('mouseleave', reset)
-  skillSel.on('mouseenter', (_e, d) => highlight(d.id)).on('mouseleave', reset)
+
+  skillSel
+    .on('mouseenter', (event, d) => {
+      showTip(event as MouseEvent, d.label ?? '', `used by ${d.deg} agent${d.deg !== 1 ? 's' : ''}`)
+      highlight(d.id)
+    })
+    .on('mouseleave', () => { hideTip(); reset() })
+
+  agSel
+    .on('mouseenter', (event, d) => {
+      showTip(event as MouseEvent, d.label ?? '', `${d.deg ?? 0} skill${d.deg !== 1 ? 's' : ''}`)
+      highlight(d.id)
+    })
+    .on('mouseleave', () => { hideTip(); reset() })
 
   // zoom + pan
   const zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.6, 4])
@@ -691,7 +787,7 @@ export default function Infographics() {
         <CloudMatrix />
       </VizCard>
 
-      <VizCard title="Agent & Skill Network" subtitle="Agents ring the edge; shared skills sit inside — the crossing links show how much the same skills are reused across agents.">
+      <VizCard title="Agent & Skill Network" subtitle="67 real skills wired to 12 agents. Highly-shared skills cluster near the centre; specialized ones stay close to their agent. Hover any node to see its name — scroll to zoom, drag to pan.">
         <Chart draw={drawNetwork} ariaLabel="Radial network: specialized agents around a ring connected to shared reusable skills at the centre" />
       </VizCard>
 
