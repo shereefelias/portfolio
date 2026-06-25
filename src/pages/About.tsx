@@ -12,13 +12,16 @@ export default function About() {
           <img
             src={photo}
             alt="Shereef Elias"
+            width={220}
+            height={220}
+            decoding="async"
             style={{
               width: 220, height: 220, borderRadius: 16, objectFit: 'cover',
               border: '2px solid rgba(208,169,85,0.5)', display: 'block',
             }}
           />
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <a href="https://www.linkedin.com/in/shereefelias/" target="_blank" rel="noreferrer"
+            <a href="https://www.linkedin.com/in/shereefelias/" target="_blank" rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent)', textDecoration: 'none', fontSize: '0.85rem' }}
             >
               <LinkedInIcon /> LinkedIn
@@ -94,6 +97,10 @@ export default function About() {
           <img
             src={careerImpact}
             alt="Engineering Leadership Career Impact infographic"
+            width={2752}
+            height={1536}
+            loading="lazy"
+            decoding="async"
             style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 8 }}
           />
         </div>

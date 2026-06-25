@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import logo from '../assets/logo.png'
+import logo from '../assets/logo.webp'
 
 interface NavItem {
   to: string
@@ -51,6 +51,8 @@ export default function Nav() {
             src={logo}
             alt="Shereef Elias"
             className="nav-brand__mark"
+            width={56}
+            height={56}
           />
           <span className="nav-brand__text">
             <span>Shereef Elias</span>

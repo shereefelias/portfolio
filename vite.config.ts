@@ -26,8 +26,31 @@ function applyMeta(html: string, path: string, title: string, description: strin
     .replace(metaProp('og:title'), `$1${t}$2`)
     .replace(metaProp('og:description'), `$1${d}$2`)
     .replace(metaProp('og:url'), `$1${url}$2`)
-    .replace(metaName('twitter:title'), `$1${t}$2`)
-    .replace(metaName('twitter:description'), `$1${d}$2`)
+}
+
+// Content-Security-Policy applied to built HTML only (not the dev server, whose
+// HMR relies on inline/eval scripts). Allows: same-origin assets, the self-hosted
+// Umami analytics host (script + beacon), inline styles (React style props +
+// Tailwind), and data: URIs for icons. JSON-LD is a non-executable data block.
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "script-src 'self' https://insights.westfieldnexus.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://insights.westfieldnexus.com",
+  "manifest-src 'self'",
+  "form-action 'self'",
+].join('; ')
+
+function injectCsp(html: string): string {
+  if (html.includes('http-equiv="Content-Security-Policy"')) return html
+  return html.replace(
+    '<meta charset="UTF-8" />',
+    `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`,
+  )
 }
 
 function redirectStub(to: string): string {
@@ -74,7 +97,7 @@ function seoPrerender(): Plugin {
     },
     closeBundle() {
       const indexPath = resolve(outDir, 'index.html')
-      const base = readFileSync(indexPath, 'utf-8')
+      const base = injectCsp(readFileSync(indexPath, 'utf-8'))
 
       for (const [path, meta] of Object.entries(routeMeta)) {
         const html = applyMeta(base, path, meta.title, meta.description)

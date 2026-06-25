@@ -924,6 +924,99 @@ button, input, textarea, select {
   }
 }
 
+/* Cookie / analytics consent banner */
+.consent-banner {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 900;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: linear-gradient(150deg, var(--teal-900), var(--teal-800));
+  border: 1px solid rgba(208, 169, 85, 0.35);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.consent-banner__text {
+  margin: 0;
+  flex: 1;
+  color: rgba(244, 240, 231, 0.88);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.consent-banner__text a {
+  color: var(--gold-strong);
+  text-decoration: underline;
+}
+
+.consent-banner__actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.consent-btn {
+  min-height: 40px;
+  padding: 0.5rem 1.1rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.consent-btn--solid {
+  border: 1px solid rgba(208, 169, 85, 0.7);
+  background: linear-gradient(180deg, #d8b869, #b99456);
+  color: #061f23;
+}
+
+.consent-btn--ghost {
+  border: 1px solid rgba(244, 240, 231, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fffdf7;
+}
+
+@media (max-width: 640px) {
+  .consent-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .consent-banner__actions {
+    justify-content: flex-end;
+  }
+}
+
+/* Skip-to-content link — visible only on keyboard focus */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1000;
+  background: var(--teal-900);
+  color: #fffdf7;
+  padding: 0.65rem 1.1rem;
+  border-radius: 0 0 8px 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
 /* ── Inner-page brand theming (Work, Advisory, System Design, About) ── */
 
 /* Dark-teal hero band that anchors the top of each inner page */

@@ -30,19 +30,19 @@ export const routeMeta: Record<string, RouteMetaEntry> = {
   '/work': {
     title: 'Work — Shereef Elias',
     description:
-      'Selected engineering work by Shereef Elias: an internal AI agent marketplace, a federated micro-frontend portal, and climate-risk and CMBS ratings platforms.',
+      'Selected engineering work by Shereef Elias — an internal AI agent marketplace, a federated micro-frontend portal, enterprise workflow automation, and CMBS & climate-risk platforms.',
     priority: 0.9,
   },
   '/advisory': {
-    title: 'Advisory & Fractional Leadership — Shereef Elias',
+    title: 'Advisory — Shereef Elias',
     description:
-      'Advisory and fractional engineering leadership by Shereef Elias — helping teams scale, adopt AI, and build Wall Street-grade technical infrastructure.',
+      'Founding technical advisor work by Shereef Elias — guiding early-stage companies on cloud architecture, IT infrastructure, SEO, operations, and hiring from day one.',
     priority: 0.9,
   },
   '/system-design': {
     title: 'System Design — Shereef Elias',
     description:
-      'System design by Shereef Elias — federated micro-frontends, event-driven ratings workflows, hybrid-cloud serverless platforms, and AML graph systems.',
+      'System design by Shereef Elias — federated micro-frontends, event-driven ratings workflows, hybrid-cloud EKS platforms, and AML entity-resolution analytics.',
     priority: 0.8,
   },
   '/infographics': {

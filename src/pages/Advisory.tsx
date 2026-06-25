@@ -90,7 +90,7 @@ function ClientCard({ client }: { client: Client }) {
             <a
               href={client.url}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               style={{ fontSize: '0.78rem', color: 'var(--accent)', textDecoration: 'none', opacity: 0.85 }}
             >
               {client.url.replace('https://', '')}

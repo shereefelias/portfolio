@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import heroPaperCut from '../assets/hero-paper-cut.png'
+import heroPaperCut from '../assets/hero-paper-cut.webp'
 
 const impactAreas = [
   {
@@ -62,14 +62,14 @@ export default function Home() {
           </p>
           <div className="home-actions" aria-label="Primary actions">
             <Link to="/work">Explore My Work</Link>
-            <a href="https://cal.com/shereefelias/30min" target="_blank" rel="noreferrer">
+            <a href="https://cal.com/shereefelias/30min" target="_blank" rel="noopener noreferrer">
               Book a Call
             </a>
           </div>
         </div>
 
         <div className="home-hero__visual" aria-hidden="true">
-          <img className="home-hero__paper-layer" src={heroPaperCut} alt="" />
+          <img className="home-hero__paper-layer" src={heroPaperCut} alt="" width={1983} height={793} decoding="async" />
         </div>
       </section>
 

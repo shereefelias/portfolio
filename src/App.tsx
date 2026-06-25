@@ -1,14 +1,17 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { createBrowserRouter, RouterProvider, Outlet, useLocation } from 'react-router-dom'
-import logo from './assets/logo.png'
+import logo from './assets/logo.webp'
 import Nav from './components/Nav'
+import ConsentBanner from './components/ConsentBanner'
 import Home from './pages/Home'
 import Work from './pages/Work'
-import Infographics from './pages/Infographics'
 import SystemDesign from './pages/SystemDesign'
 import About from './pages/About'
 import Advisory from './pages/Advisory'
 import { routeMeta, DEFAULT_META } from './seo'
+
+// D3-heavy — code-split so it only loads when the Infographics route is visited.
+const Infographics = lazy(() => import('./pages/Infographics'))
 
 // Keeps document.title and the meta description in sync on client-side
 // navigation. (Per-route static HTML with the same tags is also emitted at
@@ -33,14 +36,15 @@ function Layout() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <RouteMeta />
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <Nav />
-      <div style={{ flex: 1 }}>
+      <div id="main-content" style={{ flex: 1 }}>
         <Outlet />
       </div>
       <footer className="site-footer">
         <div className="site-footer__inner">
           <div className="site-footer__brand">
-            <img src={logo} alt="Shereef Elias" />
+            <img src={logo} alt="Shereef Elias" width={82} height={82} />
             <div>
               <p>Shereef Elias</p>
               <span>Director of Engineering</span>
@@ -69,10 +73,10 @@ function Layout() {
               <a href="mailto:shereef.elias@gmail.com" aria-label="Email">
               <MailIcon /> Email
               </a>
-              <a href="https://www.linkedin.com/in/shereefelias/" target="_blank" rel="noreferrer" aria-label="LinkedIn">
+              <a href="https://www.linkedin.com/in/shereefelias/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
               <LinkedInIcon /> LinkedIn
               </a>
-              <a href="https://cal.com/shereefelias/30min" target="_blank" rel="noreferrer" aria-label="Book a call">
+              <a href="https://cal.com/shereefelias/30min" target="_blank" rel="noopener noreferrer" aria-label="Book a call">
               <VideoIcon /> Book a Call
               </a>
             </div>
@@ -91,6 +95,7 @@ function Layout() {
           </p>
         </div>
       </footer>
+      <ConsentBanner />
     </div>
   )
 }
@@ -103,7 +108,14 @@ const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'work', element: <Work /> },
       { path: 'advisory', element: <Advisory /> },
-      { path: 'infographics', element: <Infographics /> },
+      {
+        path: 'infographics',
+        element: (
+          <Suspense fallback={<main className="page-main" aria-busy="true" />}>
+            <Infographics />
+          </Suspense>
+        ),
+      },
       { path: 'system-design', element: <SystemDesign /> },
       { path: 'about', element: <About /> },
     ],
